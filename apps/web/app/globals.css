@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @source "../../../packages/fretou-users/src";
 @source "../../../packages/fretou-trips/src";
+@source "../../../packages/fretou-clients/src";
+@source "../../../packages/fretou-components/src";
 
 @theme inline {
   --color-navy: #0d2056;

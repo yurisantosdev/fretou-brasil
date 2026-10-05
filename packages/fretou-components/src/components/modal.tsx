@@ -97,9 +97,9 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
-        className={`w-full overflow-hidden rounded-2xl border border-line bg-white ${elevated ? "shadow-[0_24px_80px_rgba(13,32,86,0.22)]" : ""} ${PANEL_SIZE[size ?? "default"]} ${panelClassName ?? ""}`.trim()}
+        className={`flex max-h-[calc(100dvh-1.5rem)] w-full flex-col overflow-hidden rounded-2xl border border-line bg-white sm:max-h-[calc(100dvh-3rem)] ${elevated ? "shadow-[0_24px_80px_rgba(13,32,86,0.22)]" : ""} ${PANEL_SIZE[size ?? "default"]} ${panelClassName ?? ""}`.trim()}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
           <div>
             {eyebrow ? (
               <p className="text-xs font-bold tracking-[0.14em] text-brand uppercase">
@@ -138,7 +138,7 @@ export function Modal({
           ) : null}
         </div>
 
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>,
     document.body

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { formatMoneyInput, parseMoney } from "@fretou/components";
 import { TripFormProps } from "./types";
 import { createClient, createUser } from "../../services/database.trips.services";
 
@@ -32,8 +33,8 @@ export function useTripForm({
   const [driverTermDays, setDriverTermDays] = useState("0");
   const [error, setError] = useState("");
 
-  const receivable = Number(freightReceivable.trim().replace(",", "."));
-  const payable = Number(freightPayable.trim().replace(",", "."));
+  const receivable = parseMoney(freightReceivable);
+  const payable = parseMoney(freightPayable);
   const margin =
     freightReceivable !== "" && freightPayable !== "" && Number.isFinite(receivable) && Number.isFinite(payable)
       ? receivable - payable
@@ -43,8 +44,8 @@ export function useTripForm({
     event.preventDefault();
 
     const weight = Number(weightKg.trim().replace(",", "."));
-    const receive = Number(freightReceivable.trim().replace(",", "."));
-    const pay = Number(freightPayable.trim().replace(",", "."));
+    const receive = parseMoney(freightReceivable);
+    const pay = parseMoney(freightPayable);
     const clientTerm = Number(clientTermDays);
     const driverTerm = Number(driverTermDays);
 
@@ -149,8 +150,8 @@ export function useTripForm({
     setProduct,
     setWeightKg,
     setLoadingDate,
-    setFreightReceivable,
-    setFreightPayable,
+    setFreightReceivable: (value: string) => setFreightReceivable(formatMoneyInput(value)),
+    setFreightPayable: (value: string) => setFreightPayable(formatMoneyInput(value)),
     setClientTermDays,
     setDriverTermDays,
     margin,

@@ -3,7 +3,7 @@
 import { ClientForm } from "@fretou/clients";
 import { UserForm } from "@fretou/users";
 import { PlusIcon } from "@phosphor-icons/react";
-import { DatePicker, Tooltip, Modal, formatCnpj, formatMoney } from "@fretou/components";
+import { DatePicker, Tooltip, Modal, formatCnpj, formatMoney, formatMoneyInput } from "@fretou/components";
 import { TripFormProps } from "./types";
 import { useTripForm } from "./services";
 
@@ -185,8 +185,8 @@ export function TripForm({
               className={inputClass}
               inputMode="decimal"
               value={freightReceivable}
-              placeholder="0,00"
-              onChange={(event) => setFreightReceivable(event.target.value)}
+              placeholder="R$ 0,00"
+              onChange={(event) => setFreightReceivable(formatMoneyInput(event.target.value))}
             />
           </label>
 
@@ -196,8 +196,8 @@ export function TripForm({
               className={inputClass}
               inputMode="decimal"
               value={freightPayable}
-              placeholder="0,00"
-              onChange={(event) => setFreightPayable(event.target.value)}
+              placeholder="R$ 0,00"
+              onChange={(event) => setFreightPayable(formatMoneyInput(event.target.value))}
             />
           </label>
 

@@ -13,6 +13,8 @@ export {
   formatDate,
   formatDateTime,
   formatMoney,
+  formatMoneyInput,
+  parseMoney,
   formatWeight,
 } from "./services/formaters";
 export { DatePicker } from "./components/datePicker";

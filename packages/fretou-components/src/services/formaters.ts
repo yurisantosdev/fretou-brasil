@@ -37,6 +37,18 @@ export function formatMoney(value: number): string {
   return money.format(value);
 }
 
+export function formatMoneyInput(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 12);
+  if (!digits) return "";
+  return money.format(Number(digits) / 100);
+}
+
+export function parseMoney(value: string): number {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return Number.NaN;
+  return Number(digits) / 100;
+}
+
 export function formatWeight(value: number): string {
   return `${weight.format(value)} kg`;
 }
