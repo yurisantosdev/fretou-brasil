@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createUsers, listUsers, updateUsers } from "./database.users.services";
 import { User, UserFormData } from "../types/users";
+import { AlertError, AlertSuccess } from "@fretou/components";
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -92,9 +93,9 @@ export function useUsers() {
       }
 
       closeModal();
-      alert(editing ? "Usuário atualizado com sucesso." : "Usuário criado com sucesso.");
+      AlertSuccess(editing ? "Usuário atualizado com sucesso." : "Usuário criado com sucesso.");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Não foi possível salvar o usuário.");
+      AlertError(err instanceof Error ? err.message : "Não foi possível salvar o usuário.");
     }
   }
 

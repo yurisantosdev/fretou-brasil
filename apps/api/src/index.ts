@@ -9,7 +9,9 @@ import { requireAuth } from "./middleware/auth";
 
 //Routes
 import authRoutes from "./routes/authRoutes";
+import { tripsRouter } from "@fretou/trips/server/router";
 import { usersRouter } from "@fretou/users/server/router";
+import { clientsRouter } from "@fretou/clients/server/router";
 
 setDefaultResultOrder("ipv4first");
 
@@ -174,6 +176,8 @@ app.use(async (req, res, next) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", requireAuth, usersRouter);
+app.use("/api/trips", requireAuth, tripsRouter);
+app.use("/api/clients", requireAuth, clientsRouter);
 
 export default app;
 

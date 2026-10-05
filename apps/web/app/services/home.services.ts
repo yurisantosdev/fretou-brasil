@@ -4,19 +4,33 @@ import { createElement, useEffect, useState } from "react";
 import { Profile, clearSession, fetchProfile, readToken } from "../lib/api";
 import { useRouter } from "next/navigation";
 import { CardModuleType } from "../types/cardModule";
-import { UsersIcon } from "@phosphor-icons/react";
+import { UsersIcon, TruckIcon, UsersThreeIcon } from "@phosphor-icons/react";
 
 export function useHome() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const modules: CardModuleType[] = [
     {
+      title: "Clientes",
+      description: "Gerencie os clientes do sistema",
+      icon: createElement(UsersThreeIcon, { size: 25 }),
+      color: "bg-brand",
+      href: "/modules/clients"
+    },
+    {
+      title: "Viagens",
+      description: "Gerencie as viagens do sistema",
+      icon: createElement(TruckIcon, { size: 25 }),
+      color: "bg-brand",
+      href: "/modules/trips"
+    },
+    {
       title: "Usuários",
       description: "Gerencie os usuários do sistema",
       icon: createElement(UsersIcon, { size: 25 }),
       color: "bg-brand",
       href: "/modules/users"
-    }
+    },
   ]
 
   useEffect(() => {

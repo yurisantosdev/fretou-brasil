@@ -1,0 +1,223 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { codigoViagem, summarize, todayISO } from "../lib/tripRules";
+import { NaturesTitles, StatusTrip, TripClient, TripDetail, TripDraft, TripDriver, TripListItem } from "../types/trips";
+import {
+  attachPhoto,
+  createTrip as createTripRequest,
+  getTrip,
+  issueCte as issueCteRequest,
+  listClients,
+  listDrivers,
+  listTrips,
+  registerDocuments,
+  registerUnload,
+  settleTitle,
+  type TripQuery,
+} from "./database.trips.services";
+
+export function useTrips() {
+  const [search, setSearch] = useState("");
+  const [trips, setTrips] = useState<TripListItem[]>([]);
+  const [drivers, setDrivers] = useState<Awaited<ReturnType<typeof listDrivers>>>([]);
+  const [driversError, setDriversError] = useState("");
+  const [clients, setClients] = useState<Awaited<ReturnType<typeof listClients>>>([]);
+  const [clientsError, setClientsError] = useState("");
+  const [tripOpen, setTripOpen] = useState<TripDetail | null>(null);
+  const [createModal, setCreateModal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusTrip | "todas">("todas");
+  const [clientFilter, setClientFilter] = useState("");
+  const [driverFilter, setDriverFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const today = todayISO();
+  const openModal = createModal || tripOpen !== null;
+  const filtros: TripQuery = {
+    status: statusFilter,
+    clienteId: clientFilter || undefined,
+    motoristaId: driverFilter || undefined,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+
+    async function load() {
+      try {
+        const [list, motoristas, tomadores] = await Promise.all([
+          listTrips(filtros, controller.signal),
+          listDrivers(controller.signal),
+          listClients(controller.signal),
+        ]);
+        if (!active) return;
+        setTrips(list);
+        setDrivers(motoristas);
+        setClients(tomadores);
+        setDriversError(motoristas.length === 0 ? "Nenhum motorista terceiro cadastrado." : "");
+        setClientsError(tomadores.length === 0 ? "Nenhum cliente cadastrado." : "");
+        setError("");
+      } catch (err) {
+        if (!active || controller.signal.aborted) return;
+        setError(err instanceof Error ? err.message : "Não foi possível carregar as viagens");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [statusFilter, clientFilter, driverFilter, dateFrom, dateTo]);
+
+  const summary = useMemo(() => summarize(trips, today), [trips, today]);
+
+  function closeModal() {
+    setCreateModal(false);
+    setTripOpen(null);
+  }
+
+  function registerClient(client: TripClient) {
+    setClients((current) => {
+      if (current.some((item) => item.id === client.id)) return current;
+      return [client, ...current];
+    });
+    setClientsError("");
+  }
+
+  function registerDriver(driver: TripDriver) {
+    setDrivers((current) => {
+      if (current.some((item) => item.id === driver.id)) return current;
+      return [driver, ...current];
+    });
+    setDriversError("");
+  }
+
+  function visivel(trip: TripListItem): boolean {
+    if (statusFilter !== "todas" && trip.status !== statusFilter) return false;
+    if (clientFilter && trip.clienteId !== clientFilter) return false;
+    if (driverFilter && trip.motoristaId !== driverFilter) return false;
+    if (dateFrom && trip.dateLoad < dateFrom) return false;
+    if (dateTo && trip.dateLoad > dateTo) return false;
+    return true;
+  }
+
+  function guardar(detalhe: TripDetail) {
+    const resposta: TripListItem = {
+      _id: detalhe.id,
+      clienteId: detalhe.clienteId,
+      motoristaId: detalhe.motoristaId,
+      origin: detalhe.origin,
+      destination: detalhe.destination,
+      product: detalhe.product,
+      load: detalhe.load,
+      dateLoad: detalhe.dateLoad,
+      dateDischarge: detalhe.dateDischarge,
+      status: detalhe.status,
+      acordoFreteId: detalhe.acordoFreteId,
+      cteId: detalhe.cteId,
+      shipping: detalhe.shipping,
+      margem: detalhe.margem,
+      titles: detalhe.titles,
+    };
+    setTrips((current) => {
+      const existe = current.some((trip) => String(trip._id) === detalhe.id);
+      const proximos = existe
+        ? current.map((trip) => (String(trip._id) === detalhe.id ? resposta : trip))
+        : [resposta, ...current];
+      return proximos.filter(visivel);
+    });
+    setTripOpen(detalhe);
+  }
+
+  async function openTrip(id: string) {
+    setCreateModal(false);
+    try {
+      const detalhe = await getTrip(id);
+      guardar(detalhe);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível abrir a viagem");
+    }
+  }
+
+  async function createTrip(draft: TripDraft) {
+    await createTripRequest(draft);
+    setTrips(await listTrips(filtros));
+    closeModal();
+  }
+
+  async function issueCte(id: string, numero: string, emitidoEm: string) {
+    guardar(await issueCteRequest(id, numero, emitidoEm));
+  }
+
+  async function sendPhoto(id: string, nome: string, enviadaEm: string, conteudo: string) {
+    guardar(await attachPhoto(id, nome, enviadaEm, conteudo));
+  }
+
+  async function unload(id: string, dataHora: string) {
+    guardar(await registerUnload(id, dataHora));
+  }
+
+  async function documents(id: string, dataHora: string) {
+    guardar(await registerDocuments(id, dataHora));
+  }
+
+  async function settle(id: string, nature: NaturesTitles, occurredAt: string) {
+    guardar(await settleTitle(id, nature, occurredAt));
+  }
+
+  const termo = search.trim().toLocaleLowerCase("pt-BR");
+  const visible = termo
+    ? trips.filter((trip) => {
+      const viagem = codigoViagem(String(trip._id)).toLocaleLowerCase("pt-BR");
+      const produto = (trip.product ?? "").toLocaleLowerCase("pt-BR");
+      const rota = `${trip.origin} ${trip.destination}`.toLocaleLowerCase("pt-BR");
+      return viagem.includes(termo) || produto.includes(termo) || rota.includes(termo);
+    })
+    : trips;
+
+  return {
+    drivers,
+    driversError,
+    registerDriver,
+    clients,
+    clientsError,
+    registerClient,
+    summary,
+    today,
+    tripOpen,
+    createModal,
+    setCreateModal,
+    openModal,
+    closeModal,
+    statusFilter,
+    setStatusFilter,
+    clientFilter,
+    setClientFilter,
+    driverFilter,
+    setDriverFilter,
+    dateFrom,
+    setDateFrom,
+    dateTo,
+    setDateTo,
+    loading,
+    error,
+    openTrip,
+    createTrip,
+    issueCte,
+    sendPhoto,
+    unload,
+    documents,
+    settle,
+    search,
+    setSearch,
+    visible
+  };
+}

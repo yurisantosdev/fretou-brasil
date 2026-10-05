@@ -21,7 +21,7 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-svh lg:grid-cols-[minmax(0,1.15fr)_minmax(380px,0.85fr)]">
-      <section className="relative flex flex-col bg-canvas bg-[linear-gradient(rgba(13,32,86,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(13,32,86,0.045)_1px,transparent_1px)] bg-size-[56px_56px] px-6 pt-6 pb-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-44 after:bg-linear-to-b after:from-transparent after:to-canvas after:content-[''] lg:px-14 lg:pt-8 lg:pb-16">
+      <section className="relative flex flex-col bg-canvas bg-[linear-gradient(rgba(13,32,86,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(13,32,86,0.045)_1px,transparent_1px)] bg-size-[56px_56px] bg-fixed px-6 pt-6 pb-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-44 after:bg-linear-to-b after:from-transparent after:to-canvas after:content-[''] lg:px-14 lg:pt-8 lg:pb-16">
         <img
           className="h-auto w-52"
           src="/logo-fretou.svg"

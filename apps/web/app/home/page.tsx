@@ -9,7 +9,7 @@ export default function Home() {
 
   return (
     <AppShell profile={profile} onLogout={logout}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-10">
         <section className="max-w-2xl">
           <p className="text-sm font-bold tracking-[0.14em] text-brand uppercase">
             Boas-vindas
