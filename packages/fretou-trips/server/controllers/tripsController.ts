@@ -10,12 +10,14 @@ import { AcordoFreteType } from "../types/AcordosFrete";
 import { CteType } from "../types/Ctes";
 import { EventsType } from "../types/Events";
 import { TitlesType } from "../types/Titles";
-import { STATUS_TRIP, StatusTrip, TripDetail, TripListItem, TripsResponse, TripsType } from "../types/Trips";
+import { DIVIDE_SHIPPING, STATUS_TRIP, StatusTrip, TripDetail, TripListItem, TripsResponse, TripsType } from "../types/Trips";
 import { VouchersType } from "../types/Vouchers";
 import {
   FatosOperacionais,
+  dataHoraObrigatoria,
   hojeISO,
   margemDoAcordo,
+  partesDoFrete,
   resolverEstado,
   titulosDaProva,
 } from "../domain/regrasViagem";
@@ -44,6 +46,7 @@ export function serializar(trip: TripsType): TripsResponse {
     acordoFreteId: trip.acordoFreteId,
     cteId: trip.cteId,
     shipping: trip.shipping,
+    divideShipping: trip.divideShipping,
   };
 }
 
@@ -96,6 +99,10 @@ function validateTrip(dataTrip: TripsType, res: Response): boolean {
   }
   if (typeof dataTrip.shipping !== "number" || dataTrip.shipping < 0) {
     res.status(400).json({ erro: "Campo shipping é obrigatório" });
+    return false;
+  }
+  if (!(DIVIDE_SHIPPING as readonly string[]).includes(dataTrip.divideShipping)) {
+    res.status(400).json({ erro: "Campo divideShipping precisa ser 50% ou 70%" });
     return false;
   }
   return true;
@@ -252,6 +259,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       load: dataTrip.load,
       dateLoad: dataTrip.dateLoad,
       shipping: dataTrip.shipping,
+      divideShipping: dataTrip.divideShipping,
       status: "AGUARDANDO_CTE",
       acordoFreteId: acordoCriado._id,
     });
@@ -348,9 +356,12 @@ export async function gravarEstado(viagem: TripsType): Promise<void> {
   const acordo = await AcordoFrete.findById(viagem.acordoFreteId).lean();
   if (!foto || !acordo) return;
 
+  const freteMotorista = viagem.advancePaidAt
+    ? partesDoFrete(acordo.freteMotorista, viagem.divideShipping).restante
+    : acordo.freteMotorista;
   const previstos = titulosDaProva({
     freteCliente: acordo.freteCliente,
-    freteMotorista: acordo.freteMotorista,
+    freteMotorista,
     prazoClienteDias: acordo.prazoClienteDias,
     prazoMotoristaDias: acordo.prazoMotoristaDias,
     emitted: cte.emitted,
@@ -408,6 +419,8 @@ export async function detailTrip(id: mongoose.Types.ObjectId, idempotente = fals
     acordoFreteId: String(trip.acordoFreteId),
     cteId: trip.cteId ? String(trip.cteId) : undefined,
     shipping: trip.shipping,
+    divideShipping: trip.divideShipping,
+    advancePaidAt: trip.advancePaidAt,
     margem: margemDoAcordo(acordoFrete),
     titles: titulosDoc.map((item) => ({
       id: String(item._id),
@@ -445,6 +458,28 @@ export async function detailTrip(id: mongoose.Types.ObjectId, idempotente = fals
     ...(idempotente ? { idempotente: true } : {}),
   };
 }
+
+export const registerAdvance = tratar(async (req, res) => {
+  const viagem = await requireTrip(idDaRota(req.params.id));
+  if (viagem.advancePaidAt) {
+    res.json(await detailTrip(viagem._id, true));
+    return;
+  }
+
+  const occurredAt = dataHoraObrigatoria(req.body.occurredAt, "occurredAt");
+  const acordo = await AcordoFrete.findById(viagem.acordoFreteId).lean();
+  if (!acordo) throw new ErroHttp(422, "A viagem está sem acordo de frete");
+
+  const titulo = await Title.findOne({ tripId: viagem._id, nature: "pagar" }).lean();
+  if (titulo?.liqiudateDate) {
+    throw new ErroHttp(422, "O pagamento do motorista já foi quitado.");
+  }
+
+  const { restante } = partesDoFrete(acordo.freteMotorista, viagem.divideShipping);
+  await Trip.updateOne({ _id: viagem._id }, { advancePaidAt: occurredAt });
+  if (titulo) await Title.updateOne({ _id: titulo._id }, { value: restante });
+  res.status(201).json(await detailTrip(viagem._id));
+});
 
 export const getById = tratar(async (req, res) => {
   const viagem = await requireTrip(idDaRota(req.params.id));

@@ -7,7 +7,7 @@ import {
   nowLocalInput,
 } from "../../lib/tripRules";
 import { FormEvent, useState } from "react";
-import { formatMoney } from "@fretou/components";
+import { AlertError, AlertSuccess, formatMoney } from "@fretou/components";
 
 export function useTripDetail({
   trip,
@@ -16,6 +16,7 @@ export function useTripDetail({
   onRegisterUnload,
   onRegisterOriginalDocuments,
   onSettle,
+  onRegisterAdvance,
 }: TripDetailProps) {
   const inputClass =
     "h-11 w-full rounded-xl border border-line bg-white px-4 text-base text-navy outline-none transition placeholder:text-placeholder focus:border-brand focus:shadow-[0_0_0_4px_rgba(28,68,242,0.14)]";
@@ -59,75 +60,93 @@ export function useTripDetail({
   const [documentsAt, setDocumentsAt] = useState(comprovantes?.received.slice(0, 16) ?? nowLocalInput());
   const [receivedAt, setReceivedAt] = useState(nowLocalInput());
   const [paidAt, setPaidAt] = useState(nowLocalInput());
-  const [error, setError] = useState("");
+  const [advanceAt, setAdvanceAt] = useState(nowLocalInput());
 
   async function emitirCte(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!cteNumber.trim() || !cteDate) {
-      setError("Informe o número e a data do CT-e.");
+      AlertError("Informe o número e a data do CT-e.");
       return;
     }
-    setError("");
     try {
       await onIssueCte(cteNumber.trim(), cteDate);
+      AlertSuccess("CT-e emitido com sucesso.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível registrar o CT-e.");
+      AlertError(err instanceof Error ? err.message : "Não foi possível registrar o CT-e.");
     }
   }
 
   async function enviarFoto(file: File | undefined) {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Envie uma imagem do caminhão carregado.");
+      AlertError("Envie uma imagem do caminhão carregado.");
       return;
     }
-    setError("");
     try {
       const conteudo = await comprimirImagem(file);
       await onAttachPhoto(file.name, new Date().toISOString(), conteudo);
+      AlertSuccess("Foto anexada com sucesso.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível anexar a foto.");
+      AlertError(err instanceof Error ? err.message : "Não foi possível anexar a foto.");
     }
   }
 
   async function registrarDescarga(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!unloadedAt || unloadedAt.slice(0, 10) < trip.dateLoad) {
-      setError("A descarga precisa de data e hora, e não pode ser anterior ao carregamento.");
+      AlertError("A descarga precisa de data e hora, e não pode ser anterior ao carregamento.");
       return;
     }
-    setError("");
+
     try {
       await onRegisterUnload(unloadedAt);
+      AlertSuccess("Descarga registrada com sucesso.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível registrar a descarga.");
+      AlertError(err instanceof Error ? err.message : "Não foi possível registrar a descarga.");
     }
   }
 
   async function liquidar(natureza: NaturesTitles, dataHora: string) {
     if (!dataHora) {
-      setError("Informe a data e a hora do lançamento.");
+      AlertError("Informe a data e a hora do lançamento.");
       return;
     }
-    setError("");
+
     try {
       await onSettle(natureza, dataHora);
+      AlertSuccess("Lançamento registrado com sucesso.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível registrar o lançamento.");
+      AlertError(err instanceof Error ? err.message : "Não foi possível registrar o lançamento.");
+    }
+  }
+
+  async function registrarAdiantamento(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!advanceAt) {
+      AlertError("Informe a data e a hora do adiantamento.");
+      return;
+    }
+
+    try {
+      await onRegisterAdvance(advanceAt);
+      AlertSuccess("Adiantamento registrado com sucesso.");
+    } catch (err) {
+      AlertError(err instanceof Error ? err.message : "Não foi possível registrar o adiantamento.");
     }
   }
 
   async function registrarComprovantes(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!documentsAt) {
-      setError("Informe a data e a hora em que os comprovantes originais chegaram.");
+      AlertError("Informe a data e a hora em que os comprovantes originais chegaram.");
       return;
     }
-    setError("");
+
     try {
       await onRegisterOriginalDocuments(documentsAt);
+      AlertSuccess("Comprovantes registrados com sucesso.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível registrar os comprovantes.");
+      AlertError(err instanceof Error ? err.message : "Não foi possível registrar os comprovantes.");
     }
   }
 
@@ -150,7 +169,9 @@ export function useTripDetail({
     enviarFoto,
     registrarDescarga,
     registrarComprovantes,
-    error,
+    registrarAdiantamento,
+    advanceAt,
+    setAdvanceAt,
     cteNumber,
     setCteNumber,
     cteDate,

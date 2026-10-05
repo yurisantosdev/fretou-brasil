@@ -53,19 +53,20 @@ export function TripForm({
     setClientTermDays,
     setDriverTermDays,
     margin,
-    error,
-    salvar,
-    salvarCliente,
-    salvarMotorista,
+    saveTrip,
+    saveClient,
+    saveDriver,
     freightReceivable,
     freightPayable,
     driverTermDays,
-    clientTermDays
+    clientTermDays,
+    divideShipping,
+    setDivideShipping
   } = data;
 
   return (
     <>
-      <form className="flex flex-col gap-5 px-5 py-5 sm:px-6" onSubmit={salvar} noValidate>
+      <form className="flex flex-col gap-5 px-5 py-5 sm:px-6" onSubmit={saveTrip} noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2 text-sm font-semibold text-navy">
             <span>Cliente</span>
@@ -221,13 +222,43 @@ export function TripForm({
             />
             <span className="text-xs font-normal text-muted">Zero significa à vista na data da foto.</span>
           </label>
+
+          <div>
+            <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
+              Divisão do frete ao motorista
+            </label>
+
+            <div className="flex justify-start gap-3 items-center">
+              <label className="flex h-11 items-center gap-3 self-end text-sm font-semibold text-navy cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="size-4 accent-brand"
+                  checked={divideShipping === "50%"}
+                  onChange={() => {
+                    setDivideShipping("50%");
+                  }}
+                />
+                50%
+              </label>
+
+              <label className="flex h-11 items-center gap-3 self-end text-sm font-semibold text-navy cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="size-4 accent-brand"
+                  checked={divideShipping === "70%"}
+                  onChange={() => {
+                    setDivideShipping("70%");
+                  }}
+                />
+                70%
+              </label>
+            </div>
+          </div>
         </div>
 
         <p className="text-sm font-semibold text-navy">
           Margem prevista: {margin === null ? "—" : formatMoney(margin)}
         </p>
-
-        {error ? <p className="text-sm font-semibold text-brand">{error}</p> : null}
 
         <div className="flex justify-end gap-3 border-t border-line pt-4">
           <button
@@ -258,7 +289,7 @@ export function TripForm({
           <ClientForm
             client={null}
             onCancel={() => setClientModal(false)}
-            onSubmit={salvarCliente}
+            onSubmit={saveClient}
           />
         ) : null}
       </Modal>
@@ -276,7 +307,7 @@ export function TripForm({
             user={null}
             defaultDriver
             onCancel={() => setDriverModal(false)}
-            onSubmit={salvarMotorista}
+            onSubmit={saveDriver}
           />
         ) : null}
       </Modal>

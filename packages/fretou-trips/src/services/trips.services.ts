@@ -12,6 +12,7 @@ import {
   listDrivers,
   listTrips,
   registerDocuments,
+  registerAdvance as registerAdvanceRequest,
   registerUnload,
   settleTitle,
   type TripQuery,
@@ -173,6 +174,10 @@ export function useTrips() {
     guardar(await settleTitle(id, nature, occurredAt));
   }
 
+  async function registerAdvance(id: string, occurredAt: string) {
+    guardar(await registerAdvanceRequest(id, occurredAt));
+  }
+
   const termo = search.trim().toLocaleLowerCase("pt-BR");
   const visible = termo
     ? trips.filter((trip) => {
@@ -216,6 +221,7 @@ export function useTrips() {
     unload,
     documents,
     settle,
+    registerAdvance,
     search,
     setSearch,
     visible

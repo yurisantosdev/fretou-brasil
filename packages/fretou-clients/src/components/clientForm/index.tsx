@@ -2,7 +2,7 @@
 
 import { ClientFormProps } from "./types";
 import { useClientForm } from "./services";
-import { formatCnpj } from "@fretou/components";
+import { formatCnpjInput } from "@fretou/components";
 
 export function ClientForm({
   client,
@@ -48,8 +48,9 @@ export function ClientForm({
             className={inputClass}
             inputMode="numeric"
             value={cnpj}
+            maxLength={18}
             placeholder="00.000.000/0000-00"
-            onChange={(event) => setCnpj(formatCnpj(event.target.value))}
+            onChange={(event) => setCnpj(formatCnpjInput(event.target.value))}
           />
         </label>
 

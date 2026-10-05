@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { ClientFormProps } from "./types";
-import { formatCnpj } from "@fretou/components";
+import { formatCnpjInput } from "@fretou/components";
 
 export function useClientForm({
   client,
@@ -13,7 +13,7 @@ export function useClientForm({
     "h-11 w-full rounded-xl border border-line bg-white px-4 text-base text-navy outline-none transition placeholder:text-placeholder focus:border-brand focus:shadow-[0_0_0_4px_rgba(28,68,242,0.14)]";
 
   const [corporateName, setCorporateName] = useState(client?.corporateName ?? "");
-  const [cnpj, setCnpj] = useState(formatCnpj(client?.cnpj ?? ""));
+  const [cnpj, setCnpj] = useState(formatCnpjInput(client?.cnpj ?? ""));
   const [timePeriod, setTimePeriod] = useState(client?.timePeriod ?? "");
   const [erro, setErro] = useState("");
 

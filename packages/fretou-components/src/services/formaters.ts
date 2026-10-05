@@ -9,11 +9,20 @@ export function formatCpf(valor: string) {
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
+export function formatCnpjInput(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 14);
+  return digits
+    .replace(/(\d{2})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+}
+
 export function formatCnpj(cnpj?: string) {
   if (!cnpj) return "—";
   const digits = cnpj.replace(/\D/g, "");
   if (digits.length !== 14) return cnpj;
-  return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+  return formatCnpjInput(digits);
 }
 
 export function datePart(value: string): string {

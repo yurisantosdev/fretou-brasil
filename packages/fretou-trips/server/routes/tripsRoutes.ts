@@ -16,3 +16,4 @@ tripsRoutes.post("/:id/foto", vouchers.attachPhoto);
 tripsRoutes.post("/:id/descarga", events.registerUnload);
 tripsRoutes.post("/:id/comprovantes", vouchers.registerDocuments);
 tripsRoutes.post("/:id/liquidacao", titles.settleTitle);
+tripsRoutes.post("/:id/adiantamento", trips.registerAdvance);

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { STATUS_TRIP, TripsType } from "../types/Trips";
+import { STATUS_TRIP, DIVIDE_SHIPPING, TripsType } from "../types/Trips";
 
 const tripsSchema = new mongoose.Schema(
   {
@@ -66,6 +66,15 @@ const tripsSchema = new mongoose.Schema(
       type: Number,
       required: true,
       trim: true,
+    },
+    divideShipping: {
+      type: String,
+      enum: DIVIDE_SHIPPING,
+      required: true,
+    },
+    advancePaidAt: {
+      type: String,
+      required: false,
     },
   },
   {

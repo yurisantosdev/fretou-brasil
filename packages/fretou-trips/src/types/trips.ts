@@ -17,6 +17,10 @@ export const STATUS_TRIP = [
 
 export type StatusTrip = (typeof STATUS_TRIP)[number];
 
+export const DIVIDE_SHIPPING = ["50%", "70%"] as const;
+
+export type DivideShipping = (typeof DIVIDE_SHIPPING)[number];
+
 export const NATURES_TITLES = ["receber", "pagar"] as const;
 
 export type NaturesTitles = (typeof NATURES_TITLES)[number];
@@ -48,6 +52,7 @@ export type TripsType = {
   acordoFreteId: string;
   cteId?: string;
   shipping: number;
+  divideShipping: DivideShipping;
   createdAt: string;
   updatedAt: string;
 };
@@ -66,6 +71,7 @@ export type TripsResponse = {
   acordoFreteId: string;
   cteId?: string;
   shipping: number;
+  divideShipping: DivideShipping;
 };
 
 export type TripDetail = {
@@ -85,6 +91,8 @@ export type TripDetail = {
   acordoFreteId: string;
   cteId?: string;
   shipping: number;
+  divideShipping: DivideShipping;
+  advancePaidAt?: string;
   margem: MargemViagem;
   titles: Array<{
     id: string;
@@ -153,6 +161,7 @@ export type TripDraft = {
   freightPayable: number;
   clientTermDays: number;
   driverTermDays: number;
+  divideShipping: DivideShipping;
 };
 
 export type LockedBalance = {
@@ -183,7 +192,15 @@ export type AcordoFreteInput = {
 
 export type CriarViagemInput = Pick<
   TripsResponse,
-  "clienteId" | "motoristaId" | "origin" | "destination" | "product" | "load" | "dateLoad" | "shipping"
+  | "clienteId"
+  | "motoristaId"
+  | "origin"
+  | "destination"
+  | "product"
+  | "load"
+  | "dateLoad"
+  | "shipping"
+  | "divideShipping"
 > & {
   acordoFrete: AcordoFreteInput;
 };

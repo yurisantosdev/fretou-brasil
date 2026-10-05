@@ -1,7 +1,7 @@
 import { AcordoFreteType } from "../types/AcordosFrete";
 import { ErroHttp } from "../lib/erroHttp";
 import { NaturesTitles } from "../types/Titles";
-import { MargemViagem, StatusTrip } from "../types/Trips";
+import { DivideShipping, MargemViagem, StatusTrip } from "../types/Trips";
 
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 const DATA_HORA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
@@ -65,6 +65,17 @@ export function resolverEstado(fatos: FatosOperacionais): StatusTrip {
   if (prova) return fatos.carregamentoNoFuturo ? "CARREGADA" : "EM_TRANSITO";
   if (fatos.cte) return "AGUARDANDO_FOTO";
   return "AGUARDANDO_CTE";
+}
+
+export function partesDoFrete(freteMotorista: number, divideShipping: DivideShipping) {
+  const percentual = divideShipping === "70%" ? 70 : 50;
+  const totalCentavos = Math.round(freteMotorista * 100);
+  const adiantamentoCentavos = Math.round((totalCentavos * percentual) / 100);
+  return {
+    percentual,
+    adiantamento: adiantamentoCentavos / 100,
+    restante: (totalCentavos - adiantamentoCentavos) / 100,
+  };
 }
 
 export function margemDoAcordo(acordo: Pick<AcordoFreteType, "freteCliente" | "freteMotorista">): MargemViagem {

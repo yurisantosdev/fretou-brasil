@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { formatMoneyInput, parseMoney } from "@fretou/components";
+import { AlertError, AlertSuccess, formatMoneyInput, parseMoney } from "@fretou/components";
 import { TripFormProps } from "./types";
+import { DivideShipping } from "../../types/trips";
 import { createClient, createUser } from "../../services/database.trips.services";
 
 export function useTripForm({
@@ -18,6 +19,7 @@ export function useTripForm({
   const inputClass =
     "h-11 w-full rounded-xl border border-line bg-white px-4 text-base text-navy outline-none transition placeholder:text-placeholder focus:border-brand focus:shadow-[0_0_0_4px_rgba(28,68,242,0.14)]";
 
+  const [divideShipping, setDivideShipping] = useState<DivideShipping>("50%");
   const [clientId, setClientId] = useState("");
   const [clientModal, setClientModal] = useState(false);
   const [driverId, setDriverId] = useState("");
@@ -31,7 +33,6 @@ export function useTripForm({
   const [freightPayable, setFreightPayable] = useState("");
   const [clientTermDays, setClientTermDays] = useState("30");
   const [driverTermDays, setDriverTermDays] = useState("0");
-  const [error, setError] = useState("");
 
   const receivable = parseMoney(freightReceivable);
   const payable = parseMoney(freightPayable);
@@ -40,7 +41,7 @@ export function useTripForm({
       ? receivable - payable
       : null;
 
-  async function salvar(event: FormEvent<HTMLFormElement>) {
+  async function saveTrip(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const weight = Number(weightKg.trim().replace(",", "."));
@@ -50,39 +51,37 @@ export function useTripForm({
     const driverTerm = Number(driverTermDays);
 
     if (!clientId) {
-      setError("Selecione o cliente.");
+      AlertError("Selecione o cliente.");
       return;
     }
     if (!driverId) {
-      setError("Selecione o motorista.");
+      AlertError("Selecione o motorista.");
       return;
     }
     if (!origin.trim() || !destination.trim()) {
-      setError("Informe a origem e o destino.");
+      AlertError("Informe a origem e o destino.");
       return;
     }
     if (!product.trim()) {
-      setError("Informe o produto.");
+      AlertError("Informe o produto.");
       return;
     }
     if (!Number.isFinite(weight) || weight <= 0) {
-      setError("Informe o peso em quilos.");
+      AlertError("Informe o peso em quilos.");
       return;
     }
     if (!loadingDate) {
-      setError("Informe a data de carregamento.");
+      AlertError("Informe a data de carregamento.");
       return;
     }
     if (freightReceivable.trim() === "" || freightPayable.trim() === "" || !Number.isFinite(receive) || receive < 0 || !Number.isFinite(pay) || pay < 0) {
-      setError("Informe o frete a receber e o frete a pagar.");
+      AlertError("Informe o frete a receber e o frete a pagar.");
       return;
     }
     if (!Number.isInteger(clientTerm) || clientTerm < 0 || !Number.isInteger(driverTerm) || driverTerm < 0) {
-      setError("Os prazos precisam ser dias inteiros, a partir de zero.");
+      AlertError("Os prazos precisam ser dias inteiros, a partir de zero.");
       return;
     }
-
-    setError("");
 
     try {
       await onSubmit({
@@ -97,20 +96,24 @@ export function useTripForm({
         freightPayable: pay,
         clientTermDays: clientTerm,
         driverTermDays: driverTerm,
+        divideShipping,
       });
+
+      AlertSuccess("Viagem cadastrada com sucesso.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível salvar a viagem.");
+      AlertError(err instanceof Error ? err.message : "Não foi possível salvar a viagem.");
     }
   }
 
-  async function salvarCliente(data: { corporateName: string; cnpj: string; timePeriod: string }) {
+  async function saveClient(data: { corporateName: string; cnpj: string; timePeriod: string }) {
     const created = await createClient(data);
     onClientCreated(created);
     setClientId(created.id);
     setClientModal(false);
+    AlertSuccess("Cliente cadastrado com sucesso.");
   }
 
-  async function salvarMotorista(data: {
+  async function saveDriver(data: {
     name: string;
     cpf: string;
     password: string;
@@ -129,6 +132,7 @@ export function useTripForm({
       setDriverId(driver.id);
     }
     setDriverModal(false);
+    AlertSuccess("Motorista cadastrado com sucesso.");
   }
   return {
     inputClass,
@@ -155,13 +159,14 @@ export function useTripForm({
     setClientTermDays,
     setDriverTermDays,
     margin,
-    error,
-    salvar,
-    salvarCliente,
-    salvarMotorista,
+    saveTrip,
+    saveClient,
+    saveDriver,
     freightReceivable,
     freightPayable,
     driverTermDays,
-    clientTermDays
+    clientTermDays,
+    divideShipping,
+    setDivideShipping
   };
 }

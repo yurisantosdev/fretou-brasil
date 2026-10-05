@@ -7,6 +7,7 @@ export type TripDetailProps = {
   onRegisterUnload: (dataHora: string) => Promise<void>;
   onRegisterOriginalDocuments: (dataHora: string) => Promise<void>;
   onSettle: (natureza: NaturesTitles, dataHora: string) => Promise<void>;
+  onRegisterAdvance: (dataHora: string) => Promise<void>;
 };
 
 export type FieldProps = {

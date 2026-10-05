@@ -1,4 +1,4 @@
-import { FinanceSummary, LockedBalance, StatusTrip, TripDetail, TripListItem } from "../types/trips";
+import { DivideShipping, FinanceSummary, LockedBalance, StatusTrip, TripDetail, TripListItem } from "../types/trips";
 
 export const STATUS_LABEL: Record<StatusTrip, string> = {
   AGUARDANDO_CTE: "Aguardando CT-e",
@@ -20,6 +20,17 @@ export function nowLocalInput(reference = new Date()): string {
   const hours = String(reference.getHours()).padStart(2, "0");
   const minutes = String(reference.getMinutes()).padStart(2, "0");
   return `${todayISO(reference)}T${hours}:${minutes}`;
+}
+
+export function partesDoFrete(freteMotorista: number, divideShipping: DivideShipping) {
+  const percentual = divideShipping === "70%" ? 70 : 50;
+  const totalCentavos = Math.round(freteMotorista * 100);
+  const adiantamentoCentavos = Math.round((totalCentavos * percentual) / 100);
+  return {
+    percentual,
+    adiantamento: adiantamentoCentavos / 100,
+    restante: (totalCentavos - adiantamentoCentavos) / 100,
+  };
 }
 
 export function codigoViagem(id: string): string {

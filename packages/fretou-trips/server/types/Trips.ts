@@ -22,6 +22,13 @@ export const STATUS_TRIP = [
 
 export type StatusTrip = (typeof STATUS_TRIP)[number];
 
+export const DIVIDE_SHIPPING = [
+  "50%",
+  "70%",
+] as const;
+
+export type DivideShipping = (typeof DIVIDE_SHIPPING)[number];
+
 export type TripsType = {
   _id: mongoose.Types.ObjectId;
   clienteId: mongoose.Types.ObjectId;
@@ -36,6 +43,8 @@ export type TripsType = {
   acordoFreteId: mongoose.Types.ObjectId;
   cteId?: mongoose.Types.ObjectId;
   shipping: number;
+  divideShipping: DivideShipping;
+  advancePaidAt?: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -54,6 +63,7 @@ export type TripsResponse = {
   acordoFreteId: mongoose.Types.ObjectId;
   cteId?: mongoose.Types.ObjectId;
   shipping: number;
+  divideShipping: DivideShipping;
 };
 
 export type TripDetail = {
@@ -73,6 +83,8 @@ export type TripDetail = {
   acordoFreteId: string;
   cteId?: string;
   shipping: number;
+  divideShipping: DivideShipping;
+  advancePaidAt?: string;
   margem: MargemViagem;
   titles: Array<{
     id: string;

@@ -10,6 +10,7 @@ export { Table } from "./components/table";
 export {
   formatCpf,
   formatCnpj,
+  formatCnpjInput,
   formatDate,
   formatDateTime,
   formatMoney,

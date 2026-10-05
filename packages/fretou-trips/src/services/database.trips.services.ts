@@ -220,6 +220,7 @@ export async function createTrip(draft: TripDraft, signal?: AbortSignal): Promis
       load: draft.weightKg,
       dateLoad: draft.loadingDate,
       shipping: draft.freightReceivable,
+      divideShipping: draft.divideShipping,
       acordoFrete: {
         freteCliente: draft.freightReceivable,
         freteMotorista: draft.freightPayable,
@@ -277,4 +278,9 @@ export function registerDocuments(id: string, occurredAt: string): Promise<TripD
 export function settleTitle(id: string, nature: NaturesTitles, occurredAt: string): Promise<TripDetail> {
   const body: TituloInput = { nature, occurredAt };
   return postEvento(id, "liquidacao", body);
+}
+
+export function registerAdvance(id: string, occurredAt: string): Promise<TripDetail> {
+  const body: EventoInput = { occurredAt };
+  return postEvento(id, "adiantamento", body);
 }
