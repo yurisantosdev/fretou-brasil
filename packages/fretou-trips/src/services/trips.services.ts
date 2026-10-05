@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { codigoViagem, summarize, todayISO } from "../lib/tripRules";
+import { codigoExibido, summarize, todayISO } from "../lib/tripRules";
 import { NaturesTitles, StatusTrip, TripClient, TripDetail, TripDraft, TripDriver, TripListItem } from "../types/trips";
 import {
   attachPhoto,
@@ -36,12 +36,14 @@ export function useTrips() {
   const [error, setError] = useState("");
   const today = todayISO();
   const openModal = createModal || tripOpen !== null;
+  const codigoConsulta = /^V-\d{4}-\d{6}$/i.test(search.trim()) ? search.trim().toUpperCase() : undefined;
   const filtros: TripQuery = {
     status: statusFilter,
     clienteId: clientFilter || undefined,
     motoristaId: driverFilter || undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
+    codigo: codigoConsulta,
   };
 
   useEffect(() => {
@@ -75,7 +77,7 @@ export function useTrips() {
       active = false;
       controller.abort();
     };
-  }, [statusFilter, clientFilter, driverFilter, dateFrom, dateTo]);
+  }, [statusFilter, clientFilter, driverFilter, dateFrom, dateTo, codigoConsulta]);
 
   const summary = useMemo(() => summarize(trips, today), [trips, today]);
 
@@ -124,6 +126,8 @@ export function useTrips() {
       acordoFreteId: detalhe.acordoFreteId,
       cteId: detalhe.cteId,
       shipping: detalhe.shipping,
+      divideShipping: detalhe.divideShipping,
+      codigo: detalhe.codigo,
       margem: detalhe.margem,
       titles: detalhe.titles,
     };
@@ -181,7 +185,7 @@ export function useTrips() {
   const termo = search.trim().toLocaleLowerCase("pt-BR");
   const visible = termo
     ? trips.filter((trip) => {
-      const viagem = codigoViagem(String(trip._id)).toLocaleLowerCase("pt-BR");
+      const viagem = codigoExibido(trip).toLocaleLowerCase("pt-BR");
       const produto = (trip.product ?? "").toLocaleLowerCase("pt-BR");
       const rota = `${trip.origin} ${trip.destination}`.toLocaleLowerCase("pt-BR");
       return viagem.includes(termo) || produto.includes(termo) || rota.includes(termo);

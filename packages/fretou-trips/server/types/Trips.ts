@@ -44,6 +44,7 @@ export type TripsType = {
   cteId?: mongoose.Types.ObjectId;
   shipping: number;
   divideShipping: DivideShipping;
+  codigo: string;
   advancePaidAt?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -64,6 +65,7 @@ export type TripsResponse = {
   cteId?: mongoose.Types.ObjectId;
   shipping: number;
   divideShipping: DivideShipping;
+  codigo: string;
 };
 
 export type TripDetail = {
@@ -84,6 +86,7 @@ export type TripDetail = {
   cteId?: string;
   shipping: number;
   divideShipping: DivideShipping;
+  codigo: string;
   advancePaidAt?: string;
   margem: MargemViagem;
   titles: Array<{

@@ -6,7 +6,7 @@ import { Modal, Table, DatePicker, formatMoney, formatWeight, formatDate, Main }
 import { TripDetail } from "./components/tripDetail";
 import { TripForm } from "./components/tripForm/index.ts";
 import {
-  codigoViagem,
+  codigoExibido,
 } from "./lib/tripRules";
 import { useTrips } from "./services/trips.services";
 import { StatusTrip } from "./types/trips";
@@ -131,7 +131,7 @@ export function TripsPage() {
           open={openModal}
           size="xl"
           onClose={closeModal}
-          eyebrow={createModal ? "Operação" : tripOpen ? codigoViagem(tripOpen.id) : undefined}
+          eyebrow={createModal ? "Operação" : tripOpen ? codigoExibido({ _id: tripOpen.id, codigo: tripOpen.codigo }) : undefined}
           title={createModal ? "Nova viagem" : tripOpen?.clienteNome ?? "Viagem"}
           description={
             createModal
@@ -244,7 +244,7 @@ export function TripsPage() {
             rows={visible}
             getRowId={(trip) => String(trip._id)}
             columns={[
-              { header: "Viagem", cell: (trip) => codigoViagem(String(trip._id)) },
+              { header: "Viagem", cell: (trip) => codigoExibido(trip) },
               {
                 header: "Rota",
                 cell: (trip) => `${trip.origin} → ${trip.destination}`,
@@ -265,7 +265,7 @@ export function TripsPage() {
                 cell: (trip) => (
                   <button
                     type="button"
-                    aria-label={`Abrir ${codigoViagem(String(trip._id))}`}
+                    aria-label={`Abrir ${codigoExibido(trip)}`}
                     className="grid size-9 cursor-pointer place-items-center rounded-xl border border-line bg-white text-navy transition hover:bg-canvas"
                     onClick={() => {
                       void openTrip(String(trip._id));

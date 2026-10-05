@@ -37,6 +37,10 @@ export function codigoViagem(id: string): string {
   return id.slice(-6).toUpperCase();
 }
 
+export function codigoExibido(trip: { _id: string; codigo?: string }): string {
+  return trip.codigo || codigoViagem(String(trip._id));
+}
+
 export function eventoDe(trip: TripDetail, tipo: TripDetail["events"][number]["type"]) {
   return trip.events.find((item) => item.type === tipo);
 }
@@ -62,7 +66,7 @@ export function summarize(trips: TripListItem[], today = todayISO()): FinanceSum
   for (const trip of trips) {
     const id = String(trip._id);
     margin += trip.margem.margemReais;
-    const label = codigoViagem(id);
+    const label = codigoExibido(trip);
     const receber = trip.titles.find((item) => item.nature === "receber");
     const pagar = trip.titles.find((item) => item.nature === "pagar");
 

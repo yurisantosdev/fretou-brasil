@@ -76,6 +76,11 @@ const tripsSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    codigo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -87,6 +92,7 @@ tripsSchema.index({ status: 1 });
 tripsSchema.index({ clienteId: 1 });
 tripsSchema.index({ motoristaId: 1 });
 tripsSchema.index({ dateLoad: 1 });
+tripsSchema.index({ codigo: 1 }, { unique: true, sparse: true });
 
 export const Trip =
   (mongoose.models.Trip as mongoose.Model<TripsType> | undefined) ??

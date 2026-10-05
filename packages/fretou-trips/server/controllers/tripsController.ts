@@ -21,6 +21,7 @@ import {
   resolverEstado,
   titulosDaProva,
 } from "../domain/regrasViagem";
+import { codigoValido, garantirCodigosExistentes, proximoCodigoViagem } from "../domain/codigoViagem";
 import { ehDuplicidade, ErroHttp } from "../lib/erroHttp";
 import { idDaRota, tratar } from "../lib/http";
 
@@ -47,7 +48,12 @@ export function serializar(trip: TripsType): TripsResponse {
     cteId: trip.cteId,
     shipping: trip.shipping,
     divideShipping: trip.divideShipping,
+    codigo: trip.codigo,
   };
+}
+
+function corpoInformaCodigo(body: unknown): boolean {
+  return Boolean(body && typeof body === "object" && "codigo" in body);
 }
 
 function validateTrip(dataTrip: TripsType, res: Response): boolean {
@@ -154,7 +160,20 @@ function filtroDaListagem(query: Request["query"]): mongoose.FilterQuery<TripsTy
 }
 
 export const list = tratar(async (req, res) => {
-  const itens = (await Trip.find(filtroDaListagem(req.query)).sort({ createdAt: -1 }).lean()) as unknown as TripsType[];
+  await garantirCodigosExistentes();
+  const codigo = textoQuery(req.query.codigo);
+  const filtro = filtroDaListagem(req.query);
+  if (codigo) {
+    const normalizado = codigo.toUpperCase();
+    if (!codigoValido(normalizado)) throw new ErroHttp(400, "Código de viagem inválido");
+    const viagem = await findByCodigo(normalizado);
+    if (!viagem) {
+      res.json([]);
+      return;
+    }
+    filtro._id = viagem._id;
+  }
+  const itens = (await Trip.find(filtro).sort({ createdAt: -1 }).lean()) as unknown as TripsType[];
   const ids = itens.map((trip) => trip._id);
   const acordoIds = itens.map((trip) => trip.acordoFreteId);
   const [titulos, acordos] = await Promise.all([
@@ -217,9 +236,20 @@ function acordoDoCorpo(body: unknown): {
   return { freteCliente, freteMotorista, prazoClienteDias, prazoMotoristaDias };
 }
 
+export async function findByCodigo(codigo: string): Promise<TripsType | null> {
+  const normalizado = codigo.trim().toUpperCase();
+  const viagem = await Trip.findOne({ codigo: normalizado }).lean();
+  return (viagem as TripsType | null) ?? null;
+}
+
 export async function create(req: Request, res: Response): Promise<void> {
   const dataTrip: TripsType = req.body;
   const acordo = acordoDoCorpo(req.body);
+
+  if (corpoInformaCodigo(req.body)) {
+    res.status(400).json({ erro: "O código da viagem é gerado automaticamente" });
+    return;
+  }
 
   if (!validateTrip(dataTrip, res)) {
     return;
@@ -250,6 +280,7 @@ export async function create(req: Request, res: Response): Promise<void> {
   try {
     const acordoCriado = await AcordoFrete.create(acordo);
     acordoId = acordoCriado._id;
+    const codigo = await proximoCodigoViagem();
     const trip = await Trip.create({
       clienteId,
       motoristaId,
@@ -260,6 +291,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       dateLoad: dataTrip.dateLoad,
       shipping: dataTrip.shipping,
       divideShipping: dataTrip.divideShipping,
+      codigo,
       status: "AGUARDANDO_CTE",
       acordoFreteId: acordoCriado._id,
     });
@@ -285,12 +317,20 @@ export async function update(req: Request, res: Response): Promise<void> {
 
   const dataTrip: TripsType = req.body;
 
+  if (corpoInformaCodigo(req.body)) {
+    res.status(400).json({ erro: "O código da viagem não pode ser alterado" });
+    return;
+  }
+
   if (!validateTrip(dataTrip, res)) {
     return;
   }
 
+  const { codigo: _codigo, ...dados } = dataTrip;
+  void _codigo;
+
   try {
-    const trip = await Trip.findByIdAndUpdate(id, { ...dataTrip }, {
+    const trip = await Trip.findByIdAndUpdate(id, dados, {
       new: true,
       runValidators: true,
     });
@@ -420,6 +460,7 @@ export async function detailTrip(id: mongoose.Types.ObjectId, idempotente = fals
     cteId: trip.cteId ? String(trip.cteId) : undefined,
     shipping: trip.shipping,
     divideShipping: trip.divideShipping,
+    codigo: trip.codigo,
     advancePaidAt: trip.advancePaidAt,
     margem: margemDoAcordo(acordoFrete),
     titles: titulosDoc.map((item) => ({

@@ -53,6 +53,7 @@ export type TripsType = {
   cteId?: string;
   shipping: number;
   divideShipping: DivideShipping;
+  codigo?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -72,6 +73,7 @@ export type TripsResponse = {
   cteId?: string;
   shipping: number;
   divideShipping: DivideShipping;
+  codigo?: string;
 };
 
 export type TripDetail = {
@@ -92,6 +94,7 @@ export type TripDetail = {
   cteId?: string;
   shipping: number;
   divideShipping: DivideShipping;
+  codigo?: string;
   advancePaidAt?: string;
   margem: MargemViagem;
   titles: Array<{

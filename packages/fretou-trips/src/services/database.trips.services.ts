@@ -160,6 +160,7 @@ export type TripQuery = {
   motoristaId?: string;
   dateFrom?: string;
   dateTo?: string;
+  codigo?: string;
 };
 
 export async function listTrips(filters: TripQuery = {}, signal?: AbortSignal): Promise<TripListItem[]> {
@@ -169,6 +170,7 @@ export async function listTrips(filters: TripQuery = {}, signal?: AbortSignal): 
   if (filters.motoristaId) params.set("motoristaId", filters.motoristaId);
   if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
   if (filters.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters.codigo) params.set("codigo", filters.codigo);
   const query = params.toString();
   const response = await fetch(query ? `${TRIPS_URL}?${query}` : TRIPS_URL, {
     signal,
