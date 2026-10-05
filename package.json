@@ -25,5 +25,9 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@fretou/users": "^0.1.0",
+    "@phosphor-icons/react": "^2.1.10"
+  }
 }

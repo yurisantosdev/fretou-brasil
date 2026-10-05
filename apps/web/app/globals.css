@@ -1,50 +1,19 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@import "tailwindcss";
+@source "../../../packages/fretou-users/src";
+
+@theme inline {
+  --color-navy: #0d2056;
+  --color-brand: #1c44f2;
+  --color-brand-dark: #1636c4;
+  --color-ink: #4d5b7c;
+  --color-muted: #5c6b8a;
+  --color-faint: #7b88a3;
+  --color-placeholder: #93a0bb;
+  --color-line: #d7deee;
+  --color-canvas: #f4f7fd;
+  --font-sans: var(--font-jakarta), "Segoe UI", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.imgDark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-
-  .imgLight {
-    display: none;
-  }
-  .imgDark {
-    display: unset;
-  }
+html {
+  color-scheme: light;
 }
