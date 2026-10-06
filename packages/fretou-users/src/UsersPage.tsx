@@ -38,14 +38,19 @@ export function UsersPage() {
             </span>
           </Link>
 
-          <div className="flex items-center justify-between w-full">
-            <p className="mt-5 text-sm font-bold tracking-[0.14em] text-brand uppercase">
-              Módulo - Usuários
-            </p>
+          <div className="mt-5 flex items-end justify-between gap-6">
+            <div>
+              <p className="text-sm font-bold tracking-[0.14em] text-brand uppercase">
+                Módulo - Usuários
+              </p>
+              <p className="mt-2 max-w-2xl text-sm text-muted">
+                Cadastre quem acessa o sistema, indique motoristas e a placa, e desative o login quando o acesso não for mais necessário.
+              </p>
+            </div>
 
             <button
               type="button"
-              className="h-10 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
+              className="h-10 shrink-0 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
               onClick={() => {
                 setUserOpen(null);
                 setCreateModal(true);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { UserFormProps } from "./types";
 import { useUserForm } from "./services";
 import { formatCpf } from "@fretou/components";
@@ -16,6 +17,14 @@ export function UserForm({
     onSubmit,
     defaultDriver
   });
+  const nameId = useId();
+  const cpfId = useId();
+  const passwordId = useId();
+  const pixId = useId();
+  const plateId = useId();
+  const driverId = useId();
+  const activeId = useId();
+
   if (!data) return null;
   const {
     salvar,
@@ -38,88 +47,145 @@ export function UserForm({
   } = data;
 
   return (
-    <form className="flex flex-col gap-5 px-5 py-5 sm:px-6" onSubmit={salvar} noValidate>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
-          Nome
-          <input
-            className={inputClass}
-            value={name}
-            placeholder="Nome completo"
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
+    <form className="flex flex-col gap-6 px-5 py-5 sm:px-6" onSubmit={salvar} noValidate>
+      <section className="flex flex-col gap-4">
+        <div>
+          <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">Identificação</h3>
+          <p className="mt-1 text-sm text-muted">Dados usados para reconhecer e autenticar o usuário.</p>
+        </div>
 
-        <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
-          CPF
-          <input
-            className={inputClass}
-            inputMode="numeric"
-            value={cpf}
-            placeholder="000.000.000-00"
-            onChange={(event) => setCpf(formatCpf(event.target.value))}
-          />
-        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label htmlFor={nameId} className="flex flex-col gap-2 text-sm font-semibold text-navy sm:col-span-2">
+            Nome
+            <input
+              id={nameId}
+              className={inputClass}
+              value={name}
+              autoComplete="name"
+              placeholder="Nome completo"
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
 
-        <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
-          Senha
-          <input
-            className={inputClass}
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            placeholder={user ? "Deixe em branco para manter" : "Digite a senha"}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
+          <label htmlFor={cpfId} className="flex flex-col gap-2 text-sm font-semibold text-navy">
+            CPF
+            <input
+              id={cpfId}
+              className={inputClass}
+              inputMode="numeric"
+              autoComplete="off"
+              value={cpf}
+              placeholder="000.000.000-00"
+              onChange={(event) => setCpf(formatCpf(event.target.value))}
+            />
+          </label>
 
-        <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
-          Chave Pix
+          <label htmlFor={passwordId} className="flex flex-col gap-2 text-sm font-semibold text-navy">
+            Senha
+            <input
+              id={passwordId}
+              className={inputClass}
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              placeholder={user ? "Nova senha" : "Digite a senha"}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+            {user ? (
+              <span className="text-xs font-normal text-muted">Deixe em branco para manter a senha atual.</span>
+            ) : null}
+          </label>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4 border-t border-line pt-6">
+        <div>
+          <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">Pagamento</h3>
+          <p className="mt-1 text-sm text-muted">Chave usada quando houver repasse por Pix.</p>
+        </div>
+
+        <label htmlFor={pixId} className="flex flex-col gap-2 text-sm font-semibold text-navy">
+          <span className="flex items-baseline gap-2">
+            Chave Pix
+            <span className="text-xs font-normal text-muted">Opcional</span>
+          </span>
           <input
+            id={pixId}
             className={inputClass}
             value={keyPix}
-            placeholder="Opcional"
+            autoComplete="off"
+            placeholder="CPF, e-mail, telefone ou chave aleatória"
             onChange={(event) => setKeyPix(event.target.value)}
           />
         </label>
+      </section>
 
-        <label className="flex h-11 items-center gap-3 self-end text-sm font-semibold text-navy">
+      <section className="flex flex-col gap-4 rounded-2xl border border-line bg-canvas/70 p-4">
+        <label htmlFor={driverId} className="flex cursor-pointer items-start gap-3">
           <input
+            id={driverId}
             type="checkbox"
-            className="size-4 accent-brand"
+            className="mt-0.5 size-4 accent-brand"
             checked={driver}
             onChange={(event) => {
               setDriver(event.target.checked);
               if (!event.target.checked) setPlateVehicle("");
             }}
           />
-          Motorista
+          <span>
+            <span className="block text-sm font-semibold text-navy">Motorista</span>
+            <span className="mt-1 block text-sm font-normal text-muted">
+              Permite vincular este usuário às viagens.
+            </span>
+          </span>
         </label>
 
         {driver ? (
-          <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
+          <label htmlFor={plateId} className="flex flex-col gap-2 text-sm font-semibold text-navy sm:max-w-xs">
             Placa
             <input
+              id={plateId}
               className={inputClass}
               value={plateVehicle}
+              autoComplete="off"
               placeholder="ABC1D23"
               onChange={(event) => setPlateVehicle(event.target.value.toUpperCase())}
             />
           </label>
         ) : null}
+      </section>
 
-        <label className="flex h-11 items-center gap-3 text-sm font-semibold text-navy sm:col-span-2">
+      <section
+        className={`flex flex-col gap-1 rounded-2xl border p-4 ${
+          active ? "border-line bg-white" : "border-amber-200 bg-amber-50"
+        }`}
+      >
+        <label htmlFor={activeId} className="flex cursor-pointer items-start gap-3">
           <input
+            id={activeId}
             type="checkbox"
-            className="size-4 accent-brand"
+            className="mt-0.5 size-4 accent-brand"
             checked={active}
             onChange={(event) => setActive(event.target.checked)}
           />
-          Usuário ativo
+          <span>
+            <span className="block text-sm font-semibold text-navy">
+              {active ? "Usuário ativo" : "Usuário desativado"}
+            </span>
+            <span className="mt-1 block text-sm font-normal text-muted">
+              {active
+                ? "O acesso ao sistema está liberado."
+                : "Sem acesso. O login fica bloqueado até reativar."}
+            </span>
+          </span>
         </label>
-      </div>
+      </section>
 
-      {erro ? <p className="text-sm font-semibold text-brand">{erro}</p> : null}
+      {erro ? (
+        <p className="text-sm font-semibold text-brand" role="alert">
+          {erro}
+        </p>
+      ) : null}
 
       <div className="flex justify-end gap-3 border-t border-line pt-4">
         <button
