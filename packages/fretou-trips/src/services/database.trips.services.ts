@@ -1,11 +1,12 @@
 import { Client } from "@fretou/clients";
-import { PapelTitulo, StatusTrip, TripClient, TripDetail, TripDriver, TripDraft, TripListItem, TripsResponse, CriarViagemInput, EventoInput, FotoInput, CteInput, TituloInput, ProgramacaoInput } from "../types/trips";
+import { PapelTitulo, StatusTrip, TripClient, TripDetail, TripDriver, TripDraft, TripListItem, TripVehicle, TripsResponse, CriarViagemInput, EventoInput, FotoInput, CteInput, TituloInput, ProgramacaoInput } from "../types/trips";
 import { User } from "@fretou/users";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const TRIPS_URL = `${API_URL}/api/trips`;
 const USERS_URL = `${API_URL}/api/users`;
 const CLIENTS_URL = `${API_URL}/api/clients`;
+const VEHICLES_URL = `${API_URL}/api/vehicles`;
 
 function authHeaders(): HeadersInit {
   if (typeof window === "undefined") return {};
@@ -47,8 +48,44 @@ export async function listDrivers(signal: AbortSignal): Promise<TripDriver[]> {
       id: String(user._id),
       name: user.name,
       thirdParty: user.thirdParty === true,
-      plateVehicle: user.plateVehicle,
     }));
+}
+
+export async function listTripVehicles(
+  driverId: string,
+  thirdParty: boolean,
+  signal?: AbortSignal,
+): Promise<TripVehicle[]> {
+  const url = thirdParty ? `${VEHICLES_URL}?driver=${encodeURIComponent(driverId)}` : VEHICLES_URL;
+  const response = await fetch(url, {
+    signal,
+    credentials: "include",
+    headers: authHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(await lerErro(response, "Não foi possível carregar os veículos"));
+  }
+
+  const data: unknown = await response.json();
+  if (!Array.isArray(data)) {
+    throw new Error("Resposta inválida da API de veículos");
+  }
+
+  return data
+    .filter((item): item is { _id: string; plate: string; model: string; totalLoad: number; active?: boolean; thirdParty?: boolean } => {
+      if (!item || typeof item !== "object") return false;
+      const vehicle = item as { active?: boolean; thirdParty?: boolean };
+      if (vehicle.active === false) return false;
+      return thirdParty ? vehicle.thirdParty === true : vehicle.thirdParty !== true;
+    })
+    .map((vehicle) => ({
+      id: String(vehicle._id),
+      plate: vehicle.plate,
+      model: vehicle.model,
+      totalLoad: vehicle.totalLoad,
+    }))
+    .sort((a, b) => a.plate.localeCompare(b.plate, "pt-BR"));
 }
 
 export async function createUser(input: {
@@ -57,7 +94,7 @@ export async function createUser(input: {
   password: string;
   driver: boolean;
   thirdParty: boolean;
-  plateVehicle: string;
+  vehicles?: User["vehicles"];
   keyPix: string;
   active?: boolean;
 }): Promise<User> {
@@ -74,8 +111,7 @@ export async function createUser(input: {
       password: input.password,
       driver: input.driver,
       thirdParty: input.driver && input.thirdParty,
-      plateVehicle:
-        input.driver && input.thirdParty ? input.plateVehicle.trim().toUpperCase() : "",
+      vehicles: input.driver && input.thirdParty ? input.vehicles ?? [] : [],
       keyPix: input.keyPix.trim(),
       active: input.active !== false,
     }),
@@ -228,6 +264,7 @@ export async function createTrip(draft: TripDraft, signal?: AbortSignal): Promis
     body: JSON.stringify({
       clienteId: draft.clientId,
       motoristaId: draft.driverId,
+      vehicleId: draft.vehicleId,
       origin: draft.origin.trim(),
       destination: draft.destination.trim(),
       product: draft.product.trim(),
@@ -262,6 +299,7 @@ export async function updateTrip(id: string, draft: TripDraft): Promise<TripDeta
     body: JSON.stringify({
       clienteId: draft.clientId,
       motoristaId: draft.driverId,
+      vehicleId: draft.vehicleId,
       origin: draft.origin.trim(),
       destination: draft.destination.trim(),
       product: draft.product.trim(),

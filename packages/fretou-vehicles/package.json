@@ -4,6 +4,7 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
+    "./vehicleTypes": "./src/constants/vehicleTypes.ts",
     "./server": "./server/index.ts",
     "./server/router": "./server/router.ts",
     "./server/models/Vehicles": "./server/models/Vehicles.ts"

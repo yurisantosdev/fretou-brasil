@@ -5,6 +5,7 @@ export type Vehicle = {
   year: number;
   totalLoad: number;
   active: boolean;
+  thirdParty?: boolean;
 };
 
 export type VehicleFormData = {

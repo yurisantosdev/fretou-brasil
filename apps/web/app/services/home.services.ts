@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useEffect, useState } from "react";
+import { createElement, useEffect, useMemo, useState } from "react";
 import { Profile, clearSession, fetchProfile, readToken } from "../lib/api";
 import { useRouter } from "next/navigation";
 import { CardModuleType } from "../types/cardModule";
@@ -12,38 +12,55 @@ import {
 } from "@phosphor-icons/react";
 
 export function useHome() {
-  const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const modules: CardModuleType[] = [
-    {
-      title: "Clientes",
-      description: "Gerencie os clientes do sistema",
-      icon: createElement(UsersThreeIcon, { size: 25 }),
-      color: "bg-brand",
-      href: "/modules/clients"
-    },
+  const MODULES: Array<CardModuleType & { visible: (profile: Profile) => boolean }> = [
     {
       title: "Viagens",
       description: "Gerencie as viagens do sistema",
       icon: createElement(TrafficSignIcon, { size: 25 }),
       color: "bg-brand",
-      href: "/modules/trips"
+      href: "/modules/trips",
+      visible: () => true,
+    },
+    {
+      title: "Clientes",
+      description: "Gerencie os clientes do sistema",
+      icon: createElement(UsersThreeIcon, { size: 25 }),
+      color: "bg-brand",
+      href: "/modules/clients",
+      visible: (profile) => !profile.driver,
     },
     {
       title: "Veículos",
       description: "Gerencie os veículos do sistema",
       icon: createElement(TruckIcon, { size: 25 }),
       color: "bg-brand",
-      href: "/modules/vehicles"
+      href: "/modules/vehicles",
+      visible: (profile) => !profile.driver || profile.thirdParty === true,
     },
     {
-      title: "Usuários",
+      title: "Usuários - Motoristas",
       description: "Gerencie os usuários do sistema",
       icon: createElement(UsersIcon, { size: 25 }),
       color: "bg-brand",
-      href: "/modules/users"
+      href: "/modules/users",
+      visible: (profile) => !profile.driver,
     },
-  ]
+  ];
+
+  function modulesFor(profile: Profile | null): CardModuleType[] {
+    const available = profile ? MODULES.filter((module) => module.visible(profile)) : MODULES.slice(0, 1);
+    return available.map(({ title, description, icon, color, href }) => ({
+      title,
+      description,
+      icon,
+      color,
+      href,
+    }));
+  }
+
+  const router = useRouter();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const modules = useMemo(() => modulesFor(profile), [profile]);
 
   useEffect(() => {
     let ativo = true;

@@ -4,6 +4,7 @@ import { EyeIcon, EyeSlashIcon, UserIcon } from "@phosphor-icons/react";
 import { Modal } from "@fretou/components";
 import { ProfileProps } from "./types";
 import { useProfile } from "./services";
+import { DriverVehicles } from "../userForm/_components/driverVehicles";
 
 export function Profile({
   account,
@@ -25,8 +26,9 @@ export function Profile({
     setPassword,
     showPassword,
     setShowPassword,
-    plateVehicle,
-    setPlateVehicle,
+    vehicles,
+    setVehicles,
+    loadingVehicles,
     keyPix,
     setKeyPix,
     erro,
@@ -36,7 +38,6 @@ export function Profile({
     nameId,
     passwordId,
     pixId,
-    plateId,
     saveUserProfile,
   } = data;
 
@@ -57,10 +58,11 @@ export function Profile({
           if (!saving) setOpen(false);
         }}
         eyebrow="Conta"
+        size={account.thirdParty ? "lg" : undefined}
         title="Meu perfil"
         description={
           account.thirdParty
-            ? "Atualize seus dados de acesso e a placa do veículo."
+            ? "Atualize seus dados de acesso e os veículos."
             : "Atualize seus dados de acesso."
         }
       >
@@ -104,17 +106,11 @@ export function Profile({
           </label>
 
           {account.thirdParty ? (
-            <label htmlFor={plateId} className="flex flex-col gap-2 text-sm font-semibold text-navy">
-              Placa do veículo
-              <input
-                id={plateId}
-                className={inputClass}
-                value={plateVehicle}
-                autoComplete="off"
-                placeholder="ABC1D23"
-                onChange={(event) => setPlateVehicle(event.target.value.toUpperCase())}
-              />
-            </label>
+            loadingVehicles ? (
+              <p className="text-sm text-muted">Carregando veículos...</p>
+            ) : (
+              <DriverVehicles vehicles={vehicles} onChange={setVehicles} inputClass={inputClass} />
+            )
           ) : null}
 
           {account.driver ? (
@@ -152,7 +148,7 @@ export function Profile({
             <button
               type="submit"
               className="h-10 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:cursor-wait disabled:opacity-70"
-              disabled={saving}
+              disabled={saving || loadingVehicles}
             >
               Salvar
             </button>

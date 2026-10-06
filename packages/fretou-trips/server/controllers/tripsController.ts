@@ -34,14 +34,65 @@ type Motorista = {
   _id: mongoose.Types.ObjectId;
   name?: string;
   driver?: boolean;
-  plateVehicle?: string;
+  thirdParty?: boolean;
 };
+
+type VeiculoViagem = {
+  vehicleId: mongoose.Types.ObjectId;
+  plate: string;
+  vehicleModel: string;
+};
+
+function cargaDoVeiculo(totalLoad: number): string {
+  return `${new Intl.NumberFormat("pt-BR").format(totalLoad)} kg`;
+}
+
+async function resolverVeiculo(
+  motorista: Motorista,
+  motoristaId: mongoose.Types.ObjectId,
+  vehicleId: unknown,
+  load: number,
+): Promise<VeiculoViagem | { erro: string }> {
+  if (!vehicleId || !mongoose.isValidObjectId(String(vehicleId))) {
+    return { erro: "Selecione o veículo." };
+  }
+
+  const id = new mongoose.Types.ObjectId(String(vehicleId));
+  const doc = await mongoose.connection.collection("vehicles").findOne({ _id: id });
+  if (!doc || doc.active === false) {
+    return { erro: "Selecione um veículo ativo." };
+  }
+
+  const terceiro = motorista.thirdParty === true;
+  const mesmoMotorista = doc.driver && String(doc.driver) === String(motoristaId);
+  if (terceiro && (doc.thirdParty !== true || !mesmoMotorista)) {
+    return { erro: "Selecione um veículo ativo deste motorista." };
+  }
+  if (!terceiro && doc.thirdParty === true) {
+    return { erro: "Selecione um veículo ativo da empresa." };
+  }
+
+  const totalLoad = typeof doc.totalLoad === "number" ? doc.totalLoad : Number(doc.totalLoad);
+  if (!Number.isFinite(totalLoad) || load > totalLoad) {
+    const capacidade = Number.isFinite(totalLoad) ? ` (${cargaDoVeiculo(totalLoad)})` : "";
+    return { erro: `O peso da viagem é maior que a carga do veículo${capacidade}.` };
+  }
+
+  const plate = typeof doc.plate === "string" ? doc.plate.trim() : "";
+  const vehicleModel = typeof doc.model === "string" ? doc.model.trim() : "";
+  if (!plate) return { erro: "Selecione um veículo ativo." };
+
+  return { vehicleId: id, plate, vehicleModel };
+}
 
 export function serializar(trip: TripsType): TripsResponse {
   return {
     _id: trip._id,
     clienteId: trip.clienteId,
     motoristaId: trip.motoristaId,
+    vehicleId: trip.vehicleId,
+    plate: trip.plate,
+    vehicleModel: trip.vehicleModel,
     origin: trip.origin,
     destination: trip.destination,
     product: trip.product ?? "",
@@ -291,6 +342,17 @@ export async function create(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  const veiculo = await resolverVeiculo(
+    motorista as Motorista,
+    motoristaId,
+    (req.body as { vehicleId?: unknown }).vehicleId,
+    dataTrip.load,
+  );
+  if ("erro" in veiculo) {
+    res.status(422).json({ erro: veiculo.erro });
+    return;
+  }
+
   let acordoId: mongoose.Types.ObjectId | undefined;
 
   try {
@@ -306,6 +368,9 @@ export async function create(req: Request, res: Response): Promise<void> {
     const trip = await Trip.create({
       clienteId,
       motoristaId,
+      vehicleId: veiculo.vehicleId,
+      plate: veiculo.plate,
+      vehicleModel: veiculo.vehicleModel,
       origin: dataTrip.origin.trim(),
       destination: dataTrip.destination.trim(),
       product: dataTrip.product.trim(),
@@ -392,6 +457,17 @@ export async function update(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  const veiculo = await resolverVeiculo(
+    motorista as Motorista,
+    motoristaId,
+    (req.body as { vehicleId?: unknown }).vehicleId,
+    dataTrip.load,
+  );
+  if ("erro" in veiculo) {
+    res.status(422).json({ erro: veiculo.erro });
+    return;
+  }
+
   const partes = partiesFromShipping(acordo.freteMotorista, dataTrip.divideShipping);
   const previstos = cte && foto?.received
     ? titulosDaProva({
@@ -421,6 +497,9 @@ export async function update(req: Request, res: Response): Promise<void> {
     {
       clienteId,
       motoristaId,
+      vehicleId: veiculo.vehicleId,
+      plate: veiculo.plate,
+      vehicleModel: veiculo.vehicleModel,
       origin: dataTrip.origin.trim(),
       destination: dataTrip.destination.trim(),
       product: dataTrip.product.trim(),
@@ -628,7 +707,9 @@ export async function detailTrip(id: mongoose.Types.ObjectId, idempotente = fals
     clienteNome: String(clienteDoc.corporateName ?? clienteDoc.nome ?? ""),
     motoristaId: String(trip.motoristaId),
     motoristaNome: (motorista as Motorista | null)?.name ?? "",
-    motoristaPlaca: (motorista as Motorista | null)?.plateVehicle || undefined,
+    vehicleId: trip.vehicleId ? String(trip.vehicleId) : undefined,
+    plate: trip.plate,
+    vehicleModel: trip.vehicleModel,
     origin: trip.origin,
     destination: trip.destination,
     product: trip.product ?? "",

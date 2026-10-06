@@ -1,3 +1,5 @@
+import { Vehicle } from "@fretou/vehicles";
+
 export type User = {
   _id: string;
   name: string;
@@ -5,9 +7,9 @@ export type User = {
   password?: string;
   driver: boolean;
   thirdParty?: boolean;
-  plateVehicle?: string;
   keyPix?: string;
   active?: boolean;
+  vehicles?: Vehicle[];
 };
 
 export type UserFormData = {
@@ -16,9 +18,9 @@ export type UserFormData = {
   password: string;
   driver: boolean;
   thirdParty: boolean;
-  plateVehicle: string;
   keyPix: string;
   active: boolean;
+  vehicles?: Vehicle[];
 };
 
 export type UserStatusFilter = "todos" | "ativos" | "inativos";

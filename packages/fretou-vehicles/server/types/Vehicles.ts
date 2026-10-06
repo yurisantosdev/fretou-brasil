@@ -7,6 +7,8 @@ export type VehiclesType = {
   year: number;
   totalLoad: number;
   active: boolean;
+  thirdParty: boolean;
+  driver?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -17,5 +19,7 @@ export type VehiclesResponse = {
   model: string;
   year: number;
   totalLoad: number;
+  thirdParty: boolean;
+  driver?: mongoose.Types.ObjectId;
   active: boolean;
 };

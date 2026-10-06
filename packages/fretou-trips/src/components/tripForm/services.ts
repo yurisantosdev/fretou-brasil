@@ -1,10 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { AlertError, AlertSuccess, formatMoney, formatMoneyInput, parseMoney } from "@fretou/components";
+import { AlertError, AlertSuccess, formatLoad, formatMoney, formatMoneyInput, parseMoney } from "@fretou/components";
 import { TripFormProps } from "./types";
-import { DivideShipping } from "../../types/trips";
-import { createClient, createUser } from "../../services/database.trips.services";
+import { DivideShipping, TripVehicle } from "../../types/trips";
+import { UserFormData } from "@fretou/users";
+import { createClient, createUser, listTripVehicles } from "../../services/database.trips.services";
 
 export function useTripForm({
   clients,
@@ -25,6 +26,10 @@ export function useTripForm({
   const [clientId, setClientId] = useState(initial?.clientId ?? "");
   const [clientModal, setClientModal] = useState(false);
   const [driverId, setDriverId] = useState(initial?.driverId ?? "");
+  const [vehicleId, setVehicleId] = useState(initial?.vehicleId ?? "");
+  const [vehicles, setVehicles] = useState<TripVehicle[]>([]);
+  const [vehiclesError, setVehiclesError] = useState("");
+  const [vehiclesLoading, setVehiclesLoading] = useState(false);
   const [driverModal, setDriverModal] = useState(false);
   const [origin, setOrigin] = useState(initial?.origin ?? "");
   const [destination, setDestination] = useState(initial?.destination ?? "");
@@ -40,6 +45,50 @@ export function useTripForm({
     const dias = cliente?.timePeriod?.match(/\d+/);
     setClientTermDays(dias?.[0] ?? "");
   }, [clientId, clients]);
+
+  const selectedDriver = drivers.find((item) => item.id === driverId);
+  const driverIsThirdParty = selectedDriver?.thirdParty === true;
+  const driverKnown = Boolean(selectedDriver);
+
+  useEffect(() => {
+    if (!driverId || !driverKnown) {
+      if (!driverId) {
+        setVehicles([]);
+        setVehiclesError("");
+        setVehiclesLoading(false);
+      }
+      return;
+    }
+
+    const controller = new AbortController();
+    setVehiclesLoading(true);
+    setVehiclesError("");
+
+    listTripVehicles(driverId, driverIsThirdParty, controller.signal)
+      .then((list) => {
+        if (controller.signal.aborted) return;
+        setVehicles(list);
+        setVehicleId((current) => (list.some((item) => item.id === current) ? current : ""));
+        setVehiclesError(
+          list.length === 0
+            ? driverIsThirdParty
+              ? "Este motorista terceiro não tem veículo ativo."
+              : "Não há veículo ativo da empresa."
+            : "",
+        );
+      })
+      .catch((err: unknown) => {
+        if (controller.signal.aborted) return;
+        setVehicles([]);
+        setVehicleId("");
+        setVehiclesError(err instanceof Error ? err.message : "Não foi possível carregar os veículos.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setVehiclesLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [driverId, driverIsThirdParty, driverKnown]);
   const [driverTermDays, setDriverTermDays] = useState(initial ? String(initial.driverTermDays) : "0");
 
   const receivable = parseMoney(freightReceivable);
@@ -66,6 +115,19 @@ export function useTripForm({
       AlertError("Selecione o motorista.");
       return;
     }
+    const selectedVehicle = vehicles.find((item) => item.id === vehicleId);
+    if (vehiclesLoading) {
+      AlertError("Aguarde o carregamento dos veículos.");
+      return;
+    }
+    if (!selectedVehicle) {
+      AlertError(
+        driverIsThirdParty && vehicles.length === 0
+          ? "Este motorista terceiro não tem veículo ativo."
+          : vehiclesError || "Selecione o veículo.",
+      );
+      return;
+    }
     if (!origin.trim() || !destination.trim()) {
       AlertError("Informe a origem e o destino.");
       return;
@@ -76,6 +138,10 @@ export function useTripForm({
     }
     if (!Number.isFinite(weight) || weight <= 0) {
       AlertError("Informe o peso em quilos.");
+      return;
+    }
+    if (weight > selectedVehicle.totalLoad) {
+      AlertError(`O peso informado passa da carga deste veículo (${formatLoad(selectedVehicle.totalLoad)}).`);
       return;
     }
     if (!loadingDate) {
@@ -99,6 +165,7 @@ export function useTripForm({
       await onSubmit({
         clientId,
         driverId,
+        vehicleId,
         origin,
         destination,
         product,
@@ -130,26 +197,17 @@ export function useTripForm({
     AlertSuccess("Cliente cadastrado com sucesso.");
   }
 
-  async function saveDriver(data: {
-    name: string;
-    cpf: string;
-    password: string;
-    driver: boolean;
-    thirdParty: boolean;
-    plateVehicle: string;
-    keyPix: string;
-    active: boolean;
-  }) {
+  async function saveDriver(data: UserFormData) {
     const created = await createUser(data);
     if (created.driver) {
       const driver = {
         id: String(created._id),
         name: created.name,
         thirdParty: created.thirdParty === true,
-        plateVehicle: created.plateVehicle,
       };
       onDriverCreated(driver);
       setDriverId(driver.id);
+      setVehicleId("");
     }
     setDriverModal(false);
     AlertSuccess("Motorista cadastrado com sucesso.");
@@ -159,6 +217,12 @@ export function useTripForm({
     clientId,
     clientModal,
     driverId,
+    vehicleId,
+    vehicles,
+    vehiclesError,
+    vehiclesLoading,
+    selectedVehicle: vehicles.find((item) => item.id === vehicleId) ?? null,
+    setVehicleId,
     driverModal,
     origin,
     destination,

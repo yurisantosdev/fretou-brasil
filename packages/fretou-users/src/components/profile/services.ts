@@ -1,10 +1,47 @@
 "use client";
 
 import { AlertSuccess } from "@fretou/components";
+import { Vehicle } from "@fretou/vehicles";
 import { ProfileAccount, ProfileProps } from "./types";
 import { updateUsers } from "../../services/database.users.services";
 import { User } from "../../types/users";
-import { FormEvent, useId, useState } from "react";
+import { FormEvent, useId, useRef, useState } from "react";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
+async function listarVeiculos(driverId: string, signal: AbortSignal): Promise<Vehicle[]> {
+  const token = sessionStorage.getItem("fretou_token");
+  const response = await fetch(`${API_URL}/api/vehicles?driver=${driverId}`, {
+    signal,
+    credentials: "include",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (!response.ok) {
+    throw new Error("Não foi possível carregar os veículos.");
+  }
+
+  const data: unknown = await response.json();
+  if (!Array.isArray(data)) {
+    throw new Error("Resposta inválida da API de veículos.");
+  }
+
+  return data.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const vehicle = item as Partial<Vehicle>;
+    if (typeof vehicle._id !== "string" || typeof vehicle.plate !== "string") return [];
+    return [
+      {
+        _id: vehicle._id,
+        plate: vehicle.plate,
+        model: typeof vehicle.model === "string" ? vehicle.model : "",
+        year: Number(vehicle.year),
+        totalLoad: Number(vehicle.totalLoad),
+        active: vehicle.active !== false,
+      },
+    ];
+  });
+}
 
 export function useProfile({
   account,
@@ -17,24 +54,47 @@ export function useProfile({
   const nameId = useId();
   const passwordId = useId();
   const pixId = useId();
-  const plateId = useId();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(account.name);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [plateVehicle, setPlateVehicle] = useState(account.plateVehicle ?? "");
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
   const [keyPix, setKeyPix] = useState(account.keyPix ?? "");
   const [erro, setErro] = useState("");
   const [saving, setSaving] = useState(false);
+  const veiculosRequest = useRef<AbortController | null>(null);
 
   function openProfile() {
+    veiculosRequest.current?.abort();
     setName(account.name);
     setPassword("");
     setShowPassword(false);
-    setPlateVehicle(account.plateVehicle ?? "");
+    setVehicles([]);
     setKeyPix(account.keyPix ?? "");
     setErro("");
     setOpen(true);
+
+    if (!account.thirdParty) {
+      setLoadingVehicles(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    veiculosRequest.current = controller;
+    setLoadingVehicles(true);
+    void listarVeiculos(account.id, controller.signal)
+      .then((lista) => {
+        setVehicles(lista);
+        setErro("");
+      })
+      .catch((err: unknown) => {
+        if (controller.signal.aborted) return;
+        setErro(err instanceof Error ? err.message : "Não foi possível carregar os veículos.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingVehicles(false);
+      });
   }
 
   async function saveUserProfile(event: FormEvent<HTMLFormElement>) {
@@ -45,21 +105,26 @@ export function useProfile({
       return;
     }
 
-    if (account.thirdParty && !plateVehicle.trim()) {
-      setErro("Informe a placa do veículo.");
+    if (account.thirdParty && loadingVehicles) {
+      setErro("Aguarde o carregamento dos veículos.");
+      return;
+    }
+
+    if (account.thirdParty && vehicles.length === 0) {
+      setErro("Informe pelo menos um veículo.");
       return;
     }
 
     const senhaNova = password.trim();
-    const placa = account.thirdParty ? plateVehicle.trim().toUpperCase() : "";
     const pix = keyPix.trim();
+    const terceiro = account.driver && account.thirdParty === true;
     const user: User = {
       _id: account.id,
       name: name.trim(),
       cpf: account.cpf,
       driver: account.driver,
-      thirdParty: account.driver && account.thirdParty === true,
-      plateVehicle: placa,
+      thirdParty: terceiro,
+      vehicles: terceiro ? vehicles : [],
       ...(account.driver ? { keyPix: pix } : {}),
       ...(senhaNova ? { password: senhaNova } : {}),
       active: account.active !== false,
@@ -75,7 +140,6 @@ export function useProfile({
       const atualizado: ProfileAccount = {
         ...account,
         name: user.name,
-        plateVehicle: placa,
         keyPix: account.driver ? pix : account.keyPix,
       };
       onUpdated?.(atualizado);
@@ -105,8 +169,9 @@ export function useProfile({
     setPassword,
     showPassword,
     setShowPassword,
-    plateVehicle,
-    setPlateVehicle,
+    vehicles,
+    setVehicles,
+    loadingVehicles,
     keyPix,
     setKeyPix,
     erro,
@@ -116,7 +181,6 @@ export function useProfile({
     nameId,
     passwordId,
     pixId,
-    plateId,
     saveUserProfile,
   };
 }

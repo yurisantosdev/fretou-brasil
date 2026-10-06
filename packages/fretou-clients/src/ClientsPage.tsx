@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CaretLeftIcon, EyeIcon } from "@phosphor-icons/react";
-import { Main, Modal, Table, formatCnpj } from "@fretou/components";
+import { Modal, Table, formatCnpj } from "@fretou/components";
 import { ClientForm } from "./components/clientForm";
 import { useClients } from "./services/clients.services";
 
@@ -25,7 +25,7 @@ export function ClientsPage() {
   } = data;
 
   return (
-    <Main>
+    <>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-10 bg-white">
         <section>
           <Link href="/home" className="group flex w-fit items-center gap-1 text-sm font-bold tracking-[0.14em] text-brand">
@@ -155,6 +155,6 @@ export function ClientsPage() {
           />
         </div>
       </div>
-    </Main>
+    </>
   );
 }

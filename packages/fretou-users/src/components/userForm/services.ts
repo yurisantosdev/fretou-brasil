@@ -3,6 +3,7 @@
 import { FormEvent, useId, useState } from "react";
 import { UserFormProps } from "./types";
 import { formatCpf } from "@fretou/components";
+import { Vehicle } from "@fretou/vehicles";
 
 export function useUserForm({
   user,
@@ -17,7 +18,6 @@ export function useUserForm({
   const cpfId = useId();
   const passwordId = useId();
   const pixId = useId();
-  const plateId = useId();
   const driverId = useId();
   const thirdPartyId = useId();
   const activeId = useId();
@@ -27,12 +27,12 @@ export function useUserForm({
   const [password, setPassword] = useState("");
   const [driver, setDriver] = useState(user?.driver ?? defaultDriver);
   const [thirdParty, setThirdParty] = useState(user?.thirdParty ?? false);
-  const [plateVehicle, setPlateVehicle] = useState(user?.plateVehicle ?? "");
+  const [vehicles, setVehicles] = useState<Vehicle[]>(user?.vehicles ?? []);
   const [keyPix, setKeyPix] = useState(user?.keyPix ?? "");
   const [active, setActive] = useState(user?.active !== false);
   const [erro, setErro] = useState("");
 
-  async function salvar(event: FormEvent<HTMLFormElement>) {
+  async function saveUser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!name.trim()) {
@@ -50,8 +50,8 @@ export function useUserForm({
       return;
     }
 
-    if (driver && thirdParty && !plateVehicle.trim()) {
-      setErro("Informe a placa do veículo.");
+    if (driver && thirdParty && !vehicles?.length) {
+      setErro("Informe pelo menos um veículo.");
       return;
     }
 
@@ -63,7 +63,7 @@ export function useUserForm({
         password,
         driver,
         thirdParty: driver && thirdParty,
-        plateVehicle: driver && thirdParty ? plateVehicle : "",
+        vehicles: driver && thirdParty ? vehicles : [],
         keyPix,
         active,
       });
@@ -73,7 +73,7 @@ export function useUserForm({
   }
 
   return {
-    salvar,
+    saveUser,
     inputClass,
     name,
     setName,
@@ -85,8 +85,8 @@ export function useUserForm({
     setDriver,
     thirdParty,
     setThirdParty,
-    plateVehicle,
-    setPlateVehicle,
+    vehicles,
+    setVehicles,
     keyPix,
     setKeyPix,
     active,
@@ -99,6 +99,5 @@ export function useUserForm({
     driverId,
     thirdPartyId,
     activeId,
-    plateId
   };
 }

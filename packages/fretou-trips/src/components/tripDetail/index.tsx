@@ -92,9 +92,10 @@ export function TripDetail({
 
       <section className="grid gap-4 sm:grid-cols-3">
         <Field label="Cliente" value={trip.clienteNome} />
+        <Field label="Motorista" value={trip.motoristaNome} />
         <Field
-          label="Motorista"
-          value={trip.motoristaPlaca ? `${trip.motoristaNome} · ${trip.motoristaPlaca}` : trip.motoristaNome}
+          label="Veículo"
+          value={trip.plate ? `${trip.plate}${trip.vehicleModel ? ` · ${trip.vehicleModel}` : ""}` : "—"}
         />
         <Field label="Estado" value={STATUS_LABEL[trip.status]} />
         <Field label="Origem" value={trip.origin} />

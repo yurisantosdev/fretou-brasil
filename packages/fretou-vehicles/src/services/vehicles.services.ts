@@ -5,7 +5,7 @@ import { createVehicle, listVehicles, updateVehicle } from "./database.vehicles.
 import { Vehicle, VehicleFormData, VehicleStatusFilter } from "../types/vehicles";
 import { AlertError, AlertSuccess } from "@fretou/components";
 
-export function useVehicles() {
+export function useVehicles(driverId?: string) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [vehicleOpen, setVehicleOpen] = useState<Vehicle | null>(null);
   const [createModal, setCreateModal] = useState(false);
@@ -43,7 +43,7 @@ export function useVehicles() {
 
     async function load() {
       try {
-        const list = await listVehicles(controller.signal);
+        const list = await listVehicles(controller.signal, driverId);
         if (!active) return;
         setVehicles(list.map(normalize));
         setError("");
@@ -60,12 +60,13 @@ export function useVehicles() {
       active = false;
       controller.abort();
     };
-  }, []);
+  }, [driverId]);
 
   const filteredVehicles = useMemo(() => {
     const termo = search.trim().toLocaleLowerCase("pt-BR");
 
     return vehicles.filter((vehicle) => {
+      if (driverId ? vehicle.thirdParty !== true : vehicle.thirdParty) return false;
       if (statusFilter === "ativos" && vehicle.active === false) return false;
       if (statusFilter === "inativos" && vehicle.active !== false) return false;
       if (!termo) return true;
@@ -77,7 +78,7 @@ export function useVehicles() {
 
       return plate.includes(termo) || model.includes(termo) || year.includes(termo) || load.includes(termo);
     });
-  }, [vehicles, search, statusFilter]);
+  }, [vehicles, search, statusFilter, driverId]);
 
   function closeModal() {
     setCreateModal(false);
@@ -151,5 +152,6 @@ export function useVehicles() {
     togglingId,
     loading,
     error,
+    ownFleet: Boolean(driverId),
   };
 }

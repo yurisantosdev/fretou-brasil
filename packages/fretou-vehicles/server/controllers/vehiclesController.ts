@@ -62,6 +62,8 @@ export function serializar(vehicle: VehiclesType): VehiclesResponse {
     model: vehicle.model,
     year: vehicle.year,
     totalLoad: vehicle.totalLoad,
+    thirdParty: vehicle.thirdParty,
+    driver: vehicle.driver,
     active: vehicle.active,
   };
 }
@@ -82,8 +84,11 @@ function dadosVeiculo(body: VehiclesType, ativoPadrao: boolean) {
   return { plate, model, year, totalLoad, active } as const;
 }
 
-export async function list(_req: Request, res: Response): Promise<void> {
-  const itens = await Vehicle.find().sort({ createdAt: -1 }).lean();
+export async function list(req: Request, res: Response): Promise<void> {
+  const driver = typeof req.query.driver === "string" ? req.query.driver : "";
+  const filtro =
+    driver && mongoose.isValidObjectId(driver) ? { driver, thirdParty: true } : {};
+  const itens = await Vehicle.find(filtro).sort({ createdAt: -1 }).lean();
   res.json(itens.map((c) => serializar(c as unknown as VehiclesType)));
 }
 
@@ -101,7 +106,7 @@ export async function create(req: Request, res: Response): Promise<void> {
   }
 
   try {
-    const vehicle = await Vehicle.create(dados);
+    const vehicle = await Vehicle.create({ ...dados, thirdParty: false });
     res.status(201).json(serializar(vehicle as VehiclesType));
   } catch (err) {
     if (placaDuplicada(err)) {

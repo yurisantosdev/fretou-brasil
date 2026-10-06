@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { CaretLeftIcon, EyeIcon } from "@phosphor-icons/react";
-import { Main, Modal, Table, formatLoad } from "@fretou/components";
+import { Modal, Table, formatLoad } from "@fretou/components";
 import { VehicleForm } from "./components/vehicleForm";
 import { useVehicles } from "./services/vehicles.services";
 
-export function VehiclesPage() {
-  const data = useVehicles();
+export function VehiclesPage({ driverId }: { driverId?: string }) {
+  const data = useVehicles(driverId);
   if (!data) return null;
   const {
     vehicles,
@@ -26,10 +26,11 @@ export function VehiclesPage() {
     setSearch,
     statusFilter,
     setStatusFilter,
+    ownFleet,
   } = data;
 
   return (
-    <Main>
+    <>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 bg-white px-6 py-10">
         <section>
           <Link href="/home" className="group flex w-fit items-center gap-1 text-sm font-bold tracking-[0.14em] text-brand">
@@ -41,20 +42,24 @@ export function VehiclesPage() {
             <div>
               <p className="text-sm font-bold tracking-[0.14em] text-brand uppercase">Módulo - Veículos</p>
               <p className="mt-2 max-w-2xl text-sm text-muted">
-                Cadastre os veículos da empresa, com placa, tipo, ano e carga em kg, e desative quando não forem mais usados nas viagens.
+                {ownFleet
+                  ? "Veículos cadastrados no seu nome, com placa, tipo, ano e carga em kg."
+                  : "Cadastre os veículos da empresa, com placa, tipo, ano e carga em kg, e desative quando não forem mais usados nas viagens."}
               </p>
             </div>
 
-            <button
-              type="button"
-              className="h-10 shrink-0 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
-              onClick={() => {
-                setVehicleOpen(null);
-                setCreateModal(true);
-              }}
-            >
-              Novo veículo
-            </button>
+            {ownFleet ? null : (
+              <button
+                type="button"
+                className="h-10 shrink-0 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
+                onClick={() => {
+                  setVehicleOpen(null);
+                  setCreateModal(true);
+                }}
+              >
+                Novo veículo
+              </button>
+            )}
           </div>
         </section>
 
@@ -157,6 +162,6 @@ export function VehiclesPage() {
           />
         </div>
       </div>
-    </Main>
+    </>
   );
 }

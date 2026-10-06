@@ -15,6 +15,21 @@ const tripsSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    vehicleId: {
+      type: mongoose.Types.ObjectId,
+      ref: "Vehicle",
+      required: false,
+    },
+    plate: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    vehicleModel: {
+      type: String,
+      required: false,
+      trim: true,
+    },
     origin: {
       type: String,
       required: true,

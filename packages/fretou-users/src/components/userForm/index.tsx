@@ -1,8 +1,8 @@
 "use client";
 
-import { useId } from "react";
 import { UserFormProps } from "./types";
 import { useUserForm } from "./services";
+import { DriverVehicles } from "./_components/driverVehicles";
 import { formatCpf } from "@fretou/components";
 
 export function UserForm({
@@ -19,7 +19,7 @@ export function UserForm({
   });
   if (!data) return null;
   const {
-    salvar,
+    saveUser,
     inputClass,
     name,
     setName,
@@ -31,8 +31,8 @@ export function UserForm({
     setDriver,
     thirdParty,
     setThirdParty,
-    plateVehicle,
-    setPlateVehicle,
+    vehicles,
+    setVehicles,
     keyPix,
     setKeyPix,
     active,
@@ -45,11 +45,10 @@ export function UserForm({
     driverId,
     thirdPartyId,
     activeId,
-    plateId
   } = data;
 
   return (
-    <form className="flex flex-col gap-6 px-5 py-5 sm:px-6" onSubmit={salvar} noValidate>
+    <form className="flex flex-col gap-6 px-5 py-5 sm:px-6" onSubmit={saveUser} noValidate>
       <section className="flex flex-col gap-4">
         <div>
           <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">Identificação</h3>
@@ -133,7 +132,7 @@ export function UserForm({
               setDriver(event.target.checked);
               if (!event.target.checked) {
                 setThirdParty(false);
-                setPlateVehicle("");
+                setVehicles([]);
               }
             }}
           />
@@ -154,30 +153,20 @@ export function UserForm({
               checked={thirdParty}
               onChange={(event) => {
                 setThirdParty(event.target.checked);
-                if (!event.target.checked) setPlateVehicle("");
+                if (!event.target.checked) setVehicles([]);
               }}
             />
             <span>
               <span className="block text-sm font-semibold text-navy">Motorista terceiro</span>
               <span className="mt-1 block text-sm font-normal text-muted">
-                Usa veículo próprio. A placa só é pedida neste caso.
+                Usa veículo próprio. Cadastre um ou mais veículos abaixo.
               </span>
             </span>
           </label>
         ) : null}
 
         {driver && thirdParty ? (
-          <label htmlFor={plateId} className="flex flex-col gap-2 text-sm font-semibold text-navy sm:max-w-xs">
-            Placa
-            <input
-              id={plateId}
-              className={inputClass}
-              value={plateVehicle}
-              autoComplete="off"
-              placeholder="ABC1D23"
-              onChange={(event) => setPlateVehicle(event.target.value.toUpperCase())}
-            />
-          </label>
+          <DriverVehicles vehicles={vehicles} onChange={setVehicles} inputClass={inputClass} />
         ) : null}
       </section>
 

@@ -89,6 +89,7 @@ export function useTrips() {
     return {
       clientId: trip.clienteId,
       driverId: trip.motoristaId,
+      vehicleId: trip.vehicleId ?? "",
       origin: trip.origin,
       destination: trip.destination,
       product: trip.product,

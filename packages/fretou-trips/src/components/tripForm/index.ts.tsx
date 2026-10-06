@@ -3,7 +3,7 @@
 import { ClientForm } from "@fretou/clients";
 import { UserForm } from "@fretou/users";
 import { PlusIcon } from "@phosphor-icons/react";
-import { DatePicker, Tooltip, Modal, formatCnpj, formatMoney, formatMoneyInput } from "@fretou/components";
+import { DatePicker, Tooltip, Modal, formatCnpj, formatLoad, formatMoney, formatMoneyInput } from "@fretou/components";
 import { TripFormProps } from "./types";
 import { useTripForm } from "./services";
 
@@ -38,6 +38,12 @@ export function TripForm({
     clientId,
     clientModal,
     driverId,
+    vehicleId,
+    vehicles,
+    vehiclesError,
+    vehiclesLoading,
+    selectedVehicle,
+    setVehicleId,
     driverModal,
     origin,
     destination,
@@ -111,14 +117,16 @@ export function TripForm({
               <select
                 className={`${inputClass} min-w-0 flex-1`}
                 value={driverId}
-                onChange={(event) => setDriverId(event.target.value)}
+                onChange={(event) => {
+                  setDriverId(event.target.value);
+                  setVehicleId("");
+                }}
               >
                 <option value="">Selecione o motorista</option>
                 {drivers.map((driver) => (
                   <option key={driver.id} value={driver.id}>
                     {driver.name}
-                    {driver.thirdParty ? " · Terceiro" : ""}
-                    {driver.plateVehicle ? ` · ${driver.plateVehicle}` : ""}
+                    {driver.thirdParty ? " · Terceiro" : " · Interno"}
                   </option>
                 ))}
               </select>
@@ -136,6 +144,36 @@ export function TripForm({
             </div>
             {driversError ? (
               <span className="text-xs font-normal text-muted">{driversError}</span>
+            ) : null}
+          </div>
+
+          <div className="flex flex-col gap-2 text-sm font-semibold text-navy">
+            <span>Veículo</span>
+            <select
+              className={inputClass}
+              value={vehicleId}
+              disabled={!driverId || vehiclesLoading}
+              onChange={(event) => setVehicleId(event.target.value)}
+            >
+              <option value="">
+                {!driverId
+                  ? "Selecione o motorista"
+                  : vehiclesLoading
+                    ? "Carregando veículos..."
+                    : "Selecione o veículo"}
+              </option>
+              {vehicles.map((vehicle) => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {vehicle.plate} · {vehicle.model}
+                </option>
+              ))}
+            </select>
+            {vehiclesError ? (
+              <span className="text-xs font-normal text-red-600">{vehiclesError}</span>
+            ) : selectedVehicle ? (
+              <span className="text-xs font-normal text-muted">
+                Carga do veículo: {formatLoad(selectedVehicle.totalLoad)}
+              </span>
             ) : null}
           </div>
 
@@ -178,6 +216,13 @@ export function TripForm({
               placeholder="32000"
               onChange={(event) => setWeightKg(event.target.value)}
             />
+            {selectedVehicle &&
+            Number.isFinite(Number(weightKg.trim().replace(",", "."))) &&
+            Number(weightKg.trim().replace(",", ".")) > selectedVehicle.totalLoad ? (
+              <span className="text-xs font-normal text-red-600">
+                O peso informado passa da carga deste veículo ({formatLoad(selectedVehicle.totalLoad)}).
+              </span>
+            ) : null}
           </label>
 
           <label className="flex flex-col gap-2 text-sm font-semibold text-navy">

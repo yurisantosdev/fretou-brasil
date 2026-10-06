@@ -27,6 +27,16 @@ const vehiclesSchema = new mongoose.Schema(
       required: true,
       default: true,
     },
+    thirdParty: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    driver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
   },
   {
     timestamps: true,

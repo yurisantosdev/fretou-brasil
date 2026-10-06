@@ -27,8 +27,9 @@ async function messageError(response: Response, fallback: string): Promise<strin
   return fallback;
 }
 
-export async function listVehicles(signal: AbortSignal): Promise<Vehicle[]> {
-  const response = await fetch(VEHICLES_URL, {
+export async function listVehicles(signal: AbortSignal, driverId?: string): Promise<Vehicle[]> {
+  const url = driverId ? `${VEHICLES_URL}?driver=${encodeURIComponent(driverId)}` : VEHICLES_URL;
+  const response = await fetch(url, {
     signal,
     credentials: "include",
     headers: authHeaders(),

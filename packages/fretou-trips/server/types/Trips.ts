@@ -35,6 +35,9 @@ export type TripsType = {
   _id: mongoose.Types.ObjectId;
   clienteId: mongoose.Types.ObjectId;
   motoristaId: mongoose.Types.ObjectId;
+  vehicleId?: mongoose.Types.ObjectId;
+  plate?: string;
+  vehicleModel?: string;
   origin: string;
   destination: string;
   product: string;
@@ -56,6 +59,9 @@ export type TripsResponse = {
   _id: mongoose.Types.ObjectId;
   clienteId: mongoose.Types.ObjectId;
   motoristaId: mongoose.Types.ObjectId;
+  vehicleId?: mongoose.Types.ObjectId;
+  plate?: string;
+  vehicleModel?: string;
   origin: string;
   destination: string;
   product: string;
@@ -77,7 +83,9 @@ export type TripDetail = {
   clienteNome: string;
   motoristaId: string;
   motoristaNome: string;
-  motoristaPlaca?: string;
+  vehicleId?: string;
+  plate?: string;
+  vehicleModel?: string;
   origin: string;
   destination: string;
   product: string;

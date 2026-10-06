@@ -52,7 +52,6 @@ export function useUsers() {
   function buildUser(data: UserFormData, current?: User): User {
     const cpf = data.cpf.replace(/\D/g, "");
     const thirdParty = data.driver && data.thirdParty;
-    const plate = thirdParty ? data.plateVehicle.trim().toUpperCase() : "";
 
     return {
       _id: current?._id ?? "",
@@ -61,7 +60,13 @@ export function useUsers() {
       password: data.password || undefined,
       driver: data.driver,
       thirdParty,
-      plateVehicle: plate,
+      vehicles: thirdParty
+        ? (data.vehicles ?? []).map((vehicle) => ({
+            ...vehicle,
+            plate: vehicle.plate.trim().toUpperCase(),
+            active: vehicle.active !== false,
+          }))
+        : [],
       keyPix: data.keyPix.trim(),
       active: data.active,
     };
@@ -80,7 +85,10 @@ export function useUsers() {
 
       const name = user.name.toLocaleLowerCase("pt-BR");
       const cpf = (user.cpf ?? "").replace(/\D/g, "");
-      const plate = (user.plateVehicle ?? "").toLocaleLowerCase("pt-BR");
+      const plate = (user.vehicles ?? [])
+        .map((vehicle) => vehicle.plate)
+        .join(" ")
+        .toLocaleLowerCase("pt-BR");
       const matchCpf = digits.length > 0 && cpf.includes(digits);
 
       return name.includes(termo) || plate.includes(termo) || matchCpf;

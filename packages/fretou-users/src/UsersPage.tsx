@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CaretLeftIcon, EyeIcon } from "@phosphor-icons/react";
-import { Main, Modal, Table } from "@fretou/components";
+import { Modal, Table } from "@fretou/components";
 import { UserForm } from "./components/userForm";
 import { useUsers } from "./services/users.services";
 
@@ -28,7 +28,7 @@ export function UsersPage() {
   } = data;
 
   return (
-    <Main>
+    <>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-10 bg-white">
         <section>
           <Link href="/home" className="group flex w-fit items-center gap-1 text-sm font-bold tracking-[0.14em] text-brand">
@@ -169,7 +169,13 @@ export function UsersPage() {
                   </span>
                 ),
               },
-              { header: "Placa", cell: (user) => user.plateVehicle || "—" },
+              {
+                header: "Placa",
+                cell: (user) => {
+                  const placas = (user.vehicles ?? []).map((vehicle) => vehicle.plate).filter(Boolean);
+                  return placas.length ? placas.join(", ") : "—";
+                },
+              },
               {
                 header: "Status",
                 cell: (user) => {
@@ -205,6 +211,6 @@ export function UsersPage() {
           />
         </div>
       </div>
-    </Main>
+    </>
   );
 }

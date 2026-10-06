@@ -48,6 +48,9 @@ export type TripsType = {
   _id: string;
   clienteId: string;
   motoristaId: string;
+  vehicleId?: string;
+  plate?: string;
+  vehicleModel?: string;
   origin: string;
   destination: string;
   product: string;
@@ -69,6 +72,9 @@ export type TripsResponse = {
   _id: string;
   clienteId: string;
   motoristaId: string;
+  vehicleId?: string;
+  plate?: string;
+  vehicleModel?: string;
   origin: string;
   destination: string;
   product: string;
@@ -90,7 +96,9 @@ export type TripDetail = {
   clienteNome: string;
   motoristaId: string;
   motoristaNome: string;
-  motoristaPlaca?: string;
+  vehicleId?: string;
+  plate?: string;
+  vehicleModel?: string;
   origin: string;
   destination: string;
   product: string;
@@ -155,7 +163,13 @@ export type TripDriver = {
   id: string;
   name: string;
   thirdParty?: boolean;
-  plateVehicle?: string;
+};
+
+export type TripVehicle = {
+  id: string;
+  plate: string;
+  model: string;
+  totalLoad: number;
 };
 
 export type TripClient = {
@@ -168,6 +182,7 @@ export type TripClient = {
 export type TripDraft = {
   clientId: string;
   driverId: string;
+  vehicleId: string;
   origin: string;
   destination: string;
   product: string;
@@ -210,6 +225,7 @@ export type CriarViagemInput = Pick<
   TripsResponse,
   | "clienteId"
   | "motoristaId"
+  | "vehicleId"
   | "origin"
   | "destination"
   | "product"

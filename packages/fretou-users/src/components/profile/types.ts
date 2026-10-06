@@ -4,7 +4,6 @@ export type ProfileAccount = {
   cpf?: string;
   driver: boolean;
   thirdParty?: boolean;
-  plateVehicle?: string;
   keyPix?: string;
   active: boolean;
 };

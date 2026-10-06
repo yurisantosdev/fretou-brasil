@@ -3,6 +3,18 @@ import { User } from "../types/users";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const USERS_URL = `${API_URL}/api/users`;
 
+async function mensagemErro(response: Response, fallback: string): Promise<string> {
+  try {
+    const data: unknown = await response.json();
+    if (data && typeof data === "object" && "erro" in data && typeof data.erro === "string") {
+      return data.erro;
+    }
+  } catch {
+    return fallback;
+  }
+  return fallback;
+}
+
 function authHeaders(): HeadersInit {
   if (typeof window === "undefined") return {};
   const token = sessionStorage.getItem("fretou_token");
@@ -45,11 +57,7 @@ export async function createUsers(
   });
 
   if (!response.ok) {
-    throw new Error(
-      response.status === 409
-        ? "Já existe um usuário com este CPF."
-        : "Não foi possível salvar o usuário"
-    );
+    throw new Error(await mensagemErro(response, "Não foi possível salvar o usuário"));
   }
 
   return await response.json() as User;
@@ -73,11 +81,7 @@ export async function updateUsers(
   });
 
   if (!response.ok) {
-    throw new Error(
-      response.status === 409
-        ? "Já existe um usuário com este CPF."
-        : "Não foi possível atualizar o usuário"
-    );
+    throw new Error(await mensagemErro(response, "Não foi possível atualizar o usuário"));
   }
 
   return await response.json() as User;

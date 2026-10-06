@@ -35,11 +35,6 @@ const usersSchema = new mongoose.Schema(
       required: true,
       default: false,
     },
-    plateVehicle: {
-      type: String,
-      required: false,
-      trim: true,
-    },
     keyPix: {
       type: String,
       required: false,

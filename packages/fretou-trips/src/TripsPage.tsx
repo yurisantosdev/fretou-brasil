@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CaretLeftIcon, EyeIcon, PencilSimpleIcon } from "@phosphor-icons/react";
-import { Modal, Table, DatePicker, formatMoney, formatWeight, formatDate, Main, Tooltip } from "@fretou/components";
+import { Modal, Table, DatePicker, formatMoney, formatWeight, formatDate, Tooltip } from "@fretou/components";
 import { TripDetail } from "./components/tripDetail";
 import { TripForm } from "./components/tripForm/index.ts";
 import {
@@ -61,7 +61,7 @@ export function TripsPage() {
   } = data;
 
   return (
-    <Main>
+    <>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-10 bg-white">
         <section>
           <Link href="/home" className="group flex w-fit items-center gap-1 text-sm font-bold tracking-[0.14em] text-brand">
@@ -279,8 +279,7 @@ export function TripsPage() {
                   {drivers.map((driver) => (
                     <option key={driver.id} value={driver.id}>
                       {driver.name}
-                      {driver.thirdParty ? " · Terceiro" : ""}
-                      {driver.plateVehicle ? ` · ${driver.plateVehicle}` : ""}
+                      {driver.thirdParty ? " · Terceiro" : " · Interno"}
                     </option>
                   ))}
                 </select>
@@ -349,6 +348,6 @@ export function TripsPage() {
           />
         </section>
       </div>
-    </Main>
+    </>
   );
 }
