@@ -5,10 +5,10 @@ import { useHome } from "../../services/home.services";
 import { ClientsPage } from "@fretou/clients"
 
 export default function Clients() {
-  const { profile, logout } = useHome();
+  const { profile, logout, updateProfile } = useHome();
 
   return (
-    <AppShell profile={profile} onLogout={logout}>
+    <AppShell profile={profile} onLogout={logout} onProfileUpdated={updateProfile}>
       <ClientsPage />
     </AppShell>
   );

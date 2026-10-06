@@ -5,10 +5,10 @@ import { useHome } from "../services/home.services";
 import { CardModule } from "./_components/cardModule";
 
 export default function Home() {
-  const { profile, logout, modules } = useHome();
+  const { profile, logout, updateProfile, modules } = useHome();
 
   return (
-    <AppShell profile={profile} onLogout={logout}>
+    <AppShell profile={profile} onLogout={logout} onProfileUpdated={updateProfile}>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-10">
         <section className="max-w-2xl">
           <p className="text-sm font-bold tracking-[0.14em] text-brand uppercase">

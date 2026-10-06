@@ -7,6 +7,9 @@ export type Profile = {
   name: string;
   cpf?: string;
   driver: boolean;
+  plateVehicle?: string;
+  keyPix?: string;
+  active: boolean;
 };
 
 export function readToken(): string | null {
@@ -38,5 +41,11 @@ export async function fetchProfile(token: string): Promise<Profile | null> {
     name: data.name,
     cpf: "cpf" in data && typeof data.cpf === "string" ? data.cpf : undefined,
     driver: "driver" in data && typeof data.driver === "boolean" ? data.driver : false,
+    plateVehicle:
+      "plateVehicle" in data && typeof data.plateVehicle === "string"
+        ? data.plateVehicle
+        : undefined,
+    keyPix: "keyPix" in data && typeof data.keyPix === "string" ? data.keyPix : undefined,
+    active: "active" in data && typeof data.active === "boolean" ? data.active : true,
   };
 }

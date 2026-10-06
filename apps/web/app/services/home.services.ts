@@ -70,9 +70,14 @@ export function useHome() {
     router.replace("/");
   }
 
+  function updateProfile(next: Profile) {
+    setProfile(next);
+  }
+
   return {
     profile,
     logout,
+    updateProfile,
     modules
   };
 }

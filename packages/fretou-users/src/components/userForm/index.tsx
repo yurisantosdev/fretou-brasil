@@ -17,14 +17,6 @@ export function UserForm({
     onSubmit,
     defaultDriver
   });
-  const nameId = useId();
-  const cpfId = useId();
-  const passwordId = useId();
-  const pixId = useId();
-  const plateId = useId();
-  const driverId = useId();
-  const activeId = useId();
-
   if (!data) return null;
   const {
     salvar,
@@ -43,7 +35,14 @@ export function UserForm({
     setKeyPix,
     active,
     setActive,
-    erro
+    erro,
+    nameId,
+    cpfId,
+    passwordId,
+    pixId,
+    driverId,
+    activeId,
+    plateId
   } = data;
 
   return (
@@ -156,9 +155,8 @@ export function UserForm({
       </section>
 
       <section
-        className={`flex flex-col gap-1 rounded-2xl border p-4 ${
-          active ? "border-line bg-white" : "border-amber-200 bg-amber-50"
-        }`}
+        className={`flex flex-col gap-1 rounded-2xl border p-4 ${active ? "border-line bg-white" : "border-amber-200 bg-amber-50"
+          }`}
       >
         <label htmlFor={activeId} className="flex cursor-pointer items-start gap-3">
           <input

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useId, useState } from "react";
 import { UserFormProps } from "./types";
 import { formatCpf } from "@fretou/components";
 
@@ -13,6 +13,13 @@ export function useUserForm({
   const inputClass =
     "h-11 w-full rounded-xl border border-line bg-white px-4 text-base text-navy outline-none transition placeholder:text-placeholder focus:border-brand focus:shadow-[0_0_0_4px_rgba(28,68,242,0.14)]";
 
+  const nameId = useId();
+  const cpfId = useId();
+  const passwordId = useId();
+  const pixId = useId();
+  const plateId = useId();
+  const driverId = useId();
+  const activeId = useId();
 
   const [name, setName] = useState(user?.name ?? "");
   const [cpf, setCpf] = useState(formatCpf(user?.cpf ?? ""));
@@ -72,5 +79,12 @@ export function useUserForm({
     active,
     setActive,
     erro,
+    nameId,
+    cpfId,
+    passwordId,
+    pixId,
+    driverId,
+    activeId,
+    plateId
   };
 }
