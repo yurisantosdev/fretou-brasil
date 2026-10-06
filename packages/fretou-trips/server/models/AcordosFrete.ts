@@ -23,6 +23,16 @@ const acordoFreteSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    adiantamento: {
+      type: Number,
+      required: false,
+      min: 0,
+    },
+    saldo: {
+      type: Number,
+      required: false,
+      min: 0,
+    },
   },
   {
     timestamps: true,

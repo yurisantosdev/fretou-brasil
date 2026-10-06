@@ -2,10 +2,11 @@ import { dataHoraObrigatoria, imagemJpeg, textoObrigatorio, textoOpcional } from
 import { idDaRota, tratar } from "../lib/http";
 import { Vouchers } from "../models/Vouchers";
 import { eventoUnico } from "./eventsController";
-import { detailTrip, requireTrip, gravarEstado } from "./tripsController";
+import { detailTrip, exigirViagemAtiva, requireTrip, gravarEstado } from "./tripsController";
 
 export const attachPhoto = tratar(async (req, res) => {
   const viagem = await requireTrip(idDaRota(req.params.id));
+  exigirViagemAtiva(viagem);
   const name = textoObrigatorio(req.body.name, "name");
   const content = imagemJpeg(req.body.content);
   const received = textoOpcional(req.body.received)
@@ -38,6 +39,7 @@ export const attachPhoto = tratar(async (req, res) => {
 
 export const registerDocuments = tratar(async (req, res) => {
   const viagem = await requireTrip(idDaRota(req.params.id));
+  exigirViagemAtiva(viagem);
   const occurredAt = dataHoraObrigatoria(req.body.occurredAt, "occurredAt");
   const description = textoOpcional(req.body.description);
   const details = {

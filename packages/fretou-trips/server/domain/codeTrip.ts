@@ -1,13 +1,13 @@
 import { Counter } from "../models/Counters";
 import { Trip } from "../models/Trips";
 
-const CODIGO = /^V-\d{4}-\d{6}$/;
+const CODE_TRIP = /^V-\d{4}-\d{6}$/;
 
-export function codigoValido(codigo: string): boolean {
-  return CODIGO.test(codigo);
+export function validateCodeTrip(code: string): boolean {
+  return CODE_TRIP.test(code);
 }
 
-export async function proximoCodigoViagem(ano = new Date().getFullYear()): Promise<string> {
+export async function nextCodeTrip(ano = new Date().getFullYear()): Promise<string> {
   const contador = await Counter.findOneAndUpdate(
     { _id: `viagem-${ano}` },
     { $inc: { sequence: 1 } },
@@ -21,19 +21,19 @@ const semCodigo = { $or: [{ codigo: { $exists: false } }, { codigo: null }, { co
 
 let pendentes: Promise<void> | null = null;
 
-export function garantirCodigosExistentes(): Promise<void> {
-  pendentes ??= atribuirCodigosPendentes().catch((err) => {
+export function ensureCodeTripsExist(): Promise<void> {
+  pendentes ??= assignCodeTripsPending().catch((err) => {
     pendentes = null;
     throw err;
   });
   return pendentes;
 }
 
-async function atribuirCodigosPendentes(): Promise<void> {
+async function assignCodeTripsPending(): Promise<void> {
   const viagens = await Trip.find(semCodigo).sort({ createdAt: 1 });
   for (const viagem of viagens) {
     const ano = viagem.createdAt instanceof Date ? viagem.createdAt.getFullYear() : new Date().getFullYear();
-    const codigo = await proximoCodigoViagem(ano);
+    const codigo = await nextCodeTrip(ano);
     await Trip.updateOne({ _id: viagem._id, ...semCodigo }, { $set: { codigo } });
   }
 }

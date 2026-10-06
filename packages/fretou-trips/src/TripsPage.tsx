@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { CaretLeftIcon, EyeIcon } from "@phosphor-icons/react";
-import { Modal, Table, DatePicker, formatMoney, formatWeight, formatDate, Main } from "@fretou/components";
+import { CaretLeftIcon, EyeIcon, PencilSimpleIcon } from "@phosphor-icons/react";
+import { Modal, Table, DatePicker, formatMoney, formatWeight, formatDate, Main, Tooltip } from "@fretou/components";
 import { TripDetail } from "./components/tripDetail";
 import { TripForm } from "./components/tripForm/index.ts";
 import {
@@ -27,6 +27,9 @@ export function TripsPage() {
     tripOpen,
     createModal,
     setCreateModal,
+    editModal,
+    setEditModal,
+    editTrip,
     openModal,
     closeModal,
     statusFilter,
@@ -48,10 +51,13 @@ export function TripsPage() {
     unload,
     documents,
     settle,
+    schedule,
     registerAdvance,
+    cancel,
     search,
     setSearch,
-    visible
+    visible,
+    draftTrip
   } = data;
 
   return (
@@ -82,7 +88,7 @@ export function TripsPage() {
             </button>
           </div>
           <p className="mt-3 max-w-3xl text-sm text-muted">
-            A viagem começa com o CT-e e a foto do caminhão carregado. Descarga e comprovantes originais podem chegar em qualquer ordem. Os títulos financeiros só são gerados quando CT-e e foto existem.
+            Os títulos saem quando o CT-e e a foto do caminhão carregado existem. O saldo só pode ser programado depois da descarga e dos comprovantes. A viagem finaliza quando adiantamento e saldo são baixados.
           </p>
         </section>
 
@@ -140,6 +146,23 @@ export function TripsPage() {
                 ? `${tripOpen.origin} → ${tripOpen.destination}`
                 : undefined
           }
+          headerAction={
+            tripOpen && !createModal && tripOpen.status !== "FINALIZADA" && tripOpen.status !== "CANCELADA" ? (
+              <Tooltip
+                label="Editar viagem"
+                side="bottom"
+              >
+                <button
+                  type="button"
+                  aria-label="Editar viagem"
+                  className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-navy transition hover:bg-canvas"
+                  onClick={() => setEditModal(true)}
+                >
+                  <PencilSimpleIcon size={18} />
+                </button>
+              </Tooltip>
+            ) : undefined
+          }
         >
           {createModal ? (
             <TripForm
@@ -161,11 +184,42 @@ export function TripsPage() {
               onAttachPhoto={(nome, enviadaEm, conteudo) => sendPhoto(tripOpen.id, nome, enviadaEm, conteudo)}
               onRegisterUnload={(dataHora) => unload(tripOpen.id, dataHora)}
               onRegisterOriginalDocuments={(dataHora) => documents(tripOpen.id, dataHora)}
-              onSettle={(natureza, dataHora) => settle(tripOpen.id, natureza, dataHora)}
+              onSettle={(papel, dataHora) => settle(tripOpen.id, papel, dataHora)}
               onRegisterAdvance={(dataHora) => registerAdvance(tripOpen.id, dataHora)}
+              onScheduleBalance={(dataHora) => schedule(tripOpen.id, dataHora)}
+              onCancelTrip={() => cancel(tripOpen.id)}
             />
           ) : null}
         </Modal>
+
+        {tripOpen ? (
+          <Modal
+            open={editModal}
+            elevated
+            size="xl"
+            eyebrow={codigoExibido({ _id: tripOpen.id, codigo: tripOpen.codigo })}
+            title="Editar viagem"
+            description={`${tripOpen.origin} → ${tripOpen.destination}`}
+            onClose={() => setEditModal(false)}
+          >
+            {editModal ? (
+              <TripForm
+                key={`${tripOpen.id}-${tripOpen.updatedAt}`}
+                clients={clients}
+                clientsError={clientsError}
+                drivers={drivers}
+                driversError={driversError}
+                initial={draftTrip(tripOpen)}
+                submitLabel="Salvar alterações"
+                successMessage="Viagem atualizada."
+                onCancel={() => setEditModal(false)}
+                onSubmit={(draft) => editTrip(tripOpen.id, draft)}
+                onClientCreated={registerClient}
+                onDriverCreated={registerDriver}
+              />
+            ) : null}
+          </Modal>
+        ) : null}
 
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-4">
@@ -194,7 +248,9 @@ export function TripsPage() {
                   <option value="CARREGADA">Carregada</option>
                   <option value="EM_TRANSITO">Em trânsito</option>
                   <option value="AGUARDANDO_COMPROVANTE">Aguardando comprovante</option>
+                  <option value="AGUARDANDO_PAGAMENTO">Aguardando pagamento</option>
                   <option value="FINALIZADA">Finalizada</option>
+                  <option value="CANCELADA">Cancelada</option>
                 </select>
               </label>
               <label className="flex flex-col gap-2 text-sm text-navy">
@@ -252,7 +308,19 @@ export function TripsPage() {
               { header: "Produto", cell: (trip) => trip.product || "—" },
               { header: "Carga", cell: (trip) => formatWeight(trip.load) },
               { header: "Carregamento", cell: (trip) => formatDate(trip.dateLoad) },
-              { header: "Estado", cell: (trip) => <StatusBadge trip={trip} /> },
+              {
+                header: "Estado",
+                cell: (trip) => (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <StatusBadge trip={trip} />
+                    {trip.margem.negativa ? (
+                      <span className="inline-flex rounded-full bg-brand/10 px-2.5 py-1 text-xs font-bold text-brand">
+                        Margem negativa · {formatMoney(trip.margem.margemReais)}
+                      </span>
+                    ) : null}
+                  </span>
+                ),
+              },
               {
                 header: "A receber",
                 cell: (trip) => {

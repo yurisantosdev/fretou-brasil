@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { codigoExibido, summarize, todayISO } from "../lib/tripRules";
-import { NaturesTitles, StatusTrip, TripClient, TripDetail, TripDraft, TripDriver, TripListItem } from "../types/trips";
+import { PapelTitulo, StatusTrip, TripClient, TripDetail, TripDraft, TripDriver, TripListItem } from "../types/trips";
 import {
   attachPhoto,
   createTrip as createTripRequest,
@@ -12,9 +12,12 @@ import {
   listDrivers,
   listTrips,
   registerDocuments,
+  cancelTrip as cancelTripRequest,
   registerAdvance as registerAdvanceRequest,
   registerUnload,
+  scheduleBalance,
   settleTitle,
+  updateTrip as updateTripRequest,
   type TripQuery,
 } from "./database.trips.services";
 
@@ -27,6 +30,7 @@ export function useTrips() {
   const [clientsError, setClientsError] = useState("");
   const [tripOpen, setTripOpen] = useState<TripDetail | null>(null);
   const [createModal, setCreateModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusTrip | "todas">("todas");
   const [clientFilter, setClientFilter] = useState("");
   const [driverFilter, setDriverFilter] = useState("");
@@ -81,8 +85,26 @@ export function useTrips() {
 
   const summary = useMemo(() => summarize(trips, today), [trips, today]);
 
+  function draftTrip(trip: TripDetail): TripDraft {
+    return {
+      clientId: trip.clienteId,
+      driverId: trip.motoristaId,
+      origin: trip.origin,
+      destination: trip.destination,
+      product: trip.product,
+      weightKg: trip.load,
+      loadingDate: trip.dateLoad,
+      freightReceivable: trip.margem.freteCliente,
+      freightPayable: trip.margem.freteMotorista,
+      clientTermDays: trip.acordoFrete.prazoClienteDias,
+      driverTermDays: trip.acordoFrete.prazoMotoristaDias,
+      divideShipping: trip.divideShipping,
+    };
+  }
+
   function closeModal() {
     setCreateModal(false);
+    setEditModal(false);
     setTripOpen(null);
   }
 
@@ -153,6 +175,11 @@ export function useTrips() {
     }
   }
 
+  async function editTrip(id: string, draft: TripDraft) {
+    guardar(await updateTripRequest(id, draft));
+    setEditModal(false);
+  }
+
   async function createTrip(draft: TripDraft) {
     await createTripRequest(draft);
     setTrips(await listTrips(filtros));
@@ -175,12 +202,20 @@ export function useTrips() {
     guardar(await registerDocuments(id, dataHora));
   }
 
-  async function settle(id: string, nature: NaturesTitles, occurredAt: string) {
-    guardar(await settleTitle(id, nature, occurredAt));
+  async function settle(id: string, papel: PapelTitulo, occurredAt: string) {
+    guardar(await settleTitle(id, papel, occurredAt));
+  }
+
+  async function schedule(id: string, scheduledAt: string) {
+    guardar(await scheduleBalance(id, scheduledAt));
   }
 
   async function registerAdvance(id: string, occurredAt: string) {
     guardar(await registerAdvanceRequest(id, occurredAt));
+  }
+
+  async function cancel(id: string) {
+    guardar(await cancelTripRequest(id));
   }
 
   const termo = search.trim().toLocaleLowerCase("pt-BR");
@@ -205,6 +240,9 @@ export function useTrips() {
     tripOpen,
     createModal,
     setCreateModal,
+    editModal,
+    setEditModal,
+    editTrip,
     openModal,
     closeModal,
     statusFilter,
@@ -226,9 +264,12 @@ export function useTrips() {
     unload,
     documents,
     settle,
+    schedule,
     registerAdvance,
+    cancel,
     search,
     setSearch,
-    visible
+    visible,
+    draftTrip
   };
 }

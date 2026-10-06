@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { TitlesType, NATURES_TITLES } from "../types/Titles";
+import { TitlesType, NATURES_TITLES, PAPEIS_TITULO } from "../types/Titles";
 
 const titlesSchema = new mongoose.Schema(
   {
@@ -13,6 +13,11 @@ const titlesSchema = new mongoose.Schema(
       type: String,
       enum: NATURES_TITLES,
       required: true,
+    },
+    papel: {
+      type: String,
+      enum: PAPEIS_TITULO,
+      required: false,
     },
     value: {
       type: Number,
@@ -29,6 +34,11 @@ const titlesSchema = new mongoose.Schema(
       required: false,
       trim: true,
     },
+    scheduledAt: {
+      type: String,
+      required: false,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -36,7 +46,10 @@ const titlesSchema = new mongoose.Schema(
   }
 );
 
-titlesSchema.index({ tripId: 1, nature: 1 }, { unique: true });
+titlesSchema.index(
+  { tripId: 1, papel: 1 },
+  { unique: true, partialFilterExpression: { papel: { $type: "string" } } },
+);
 
 export const Title =
   (mongoose.models.Title as mongoose.Model<TitlesType> | undefined) ??

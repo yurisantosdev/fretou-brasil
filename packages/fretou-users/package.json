@@ -21,6 +21,7 @@
     "mongoose": "^8.23.1"
   },
   "dependencies": {
+    "@fretou/components": "*",
     "@phosphor-icons/react": "^2.1.10",
     "bcryptjs": "^3.0.3",
     "next": "16.3.3",

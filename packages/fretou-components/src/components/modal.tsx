@@ -7,6 +7,8 @@ import type { ModalProps, ModalSize } from "../types/modal";
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
+const modalStack: Array<() => void> = [];
+
 const PANEL_SIZE: Record<"default" | ModalSize, string> = {
   default: "max-w-lg",
   lg: "max-w-3xl",
@@ -25,6 +27,7 @@ export function Modal({
   size,
   panelClassName,
   elevated = false,
+  headerAction,
 }: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
@@ -45,10 +48,15 @@ export function Modal({
       target?.focus();
     });
 
+    const close = () => onCloseRef.current();
+    modalStack.push(close);
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        if (modalStack[modalStack.length - 1] !== close) return;
         event.preventDefault();
-        onCloseRef.current();
+        event.stopImmediatePropagation();
+        close();
         return;
       }
 
@@ -75,6 +83,8 @@ export function Modal({
     return () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("keydown", onKeyDown);
+      const index = modalStack.lastIndexOf(close);
+      if (index >= 0) modalStack.splice(index, 1);
       document.body.style.overflow = previousOverflow;
       previousFocus?.focus();
     };
@@ -88,7 +98,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-navy/45 p-3 backdrop-blur-md sm:items-center sm:p-6"
+      className={`fixed inset-0 flex items-end justify-center bg-navy/45 p-3 backdrop-blur-md sm:items-center sm:p-6 ${elevated ? "z-[60]" : "z-50"}`}
       onMouseDown={handleBackdropMouseDown}
     >
       <div
@@ -118,6 +128,8 @@ export function Modal({
               </p>
             ) : null}
           </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {headerAction}
           {showCloseButton ? (
             <button
               ref={closeRef}
@@ -136,6 +148,7 @@ export function Modal({
               </svg>
             </button>
           ) : null}
+          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>

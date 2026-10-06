@@ -7,6 +7,6 @@ export class ErroHttp extends Error {
   }
 }
 
-export function ehDuplicidade(err: unknown): boolean {
+export function isDuplicate(err: unknown): boolean {
   return typeof err === "object" && err !== null && "code" in err && (err as { code?: number }).code === 11000;
 }

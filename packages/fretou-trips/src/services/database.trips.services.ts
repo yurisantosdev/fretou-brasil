@@ -1,5 +1,5 @@
 import { Client } from "@fretou/clients";
-import { NaturesTitles, StatusTrip, TripClient, TripDetail, TripDriver, TripDraft, TripListItem, TripsResponse, CriarViagemInput, EventoInput, FotoInput, CteInput, TituloInput } from "../types/trips";
+import { PapelTitulo, StatusTrip, TripClient, TripDetail, TripDriver, TripDraft, TripListItem, TripsResponse, CriarViagemInput, EventoInput, FotoInput, CteInput, TituloInput, ProgramacaoInput } from "../types/trips";
 import { User } from "@fretou/users";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -111,6 +111,7 @@ export async function listClients(signal: AbortSignal): Promise<TripClient[]> {
     id: String(client._id),
     corporateName: client.corporateName,
     cnpj: client.cnpj,
+    timePeriod: client.timePeriod,
   }));
 }
 
@@ -151,6 +152,7 @@ export async function createClient(input: {
     id: String(client._id),
     corporateName: client.corporateName,
     cnpj: client.cnpj,
+    timePeriod: client.timePeriod,
   };
 }
 
@@ -239,6 +241,40 @@ export async function createTrip(draft: TripDraft, signal?: AbortSignal): Promis
   return (await response.json()) as TripsResponse;
 }
 
+export async function updateTrip(id: string, draft: TripDraft): Promise<TripDetail> {
+  const response = await fetch(`${TRIPS_URL}/${id}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({
+      clienteId: draft.clientId,
+      motoristaId: draft.driverId,
+      origin: draft.origin.trim(),
+      destination: draft.destination.trim(),
+      product: draft.product.trim(),
+      load: draft.weightKg,
+      dateLoad: draft.loadingDate,
+      shipping: draft.freightReceivable,
+      divideShipping: draft.divideShipping,
+      acordoFrete: {
+        freteCliente: draft.freightReceivable,
+        freteMotorista: draft.freightPayable,
+        prazoClienteDias: draft.clientTermDays,
+        prazoMotoristaDias: draft.driverTermDays,
+      },
+    } satisfies CriarViagemInput),
+  });
+
+  if (!response.ok) {
+    throw new Error(await lerErro(response, "Não foi possível salvar a viagem"));
+  }
+
+  return (await response.json()) as TripDetail;
+}
+
 async function postEvento(id: string, caminho: string, body: unknown): Promise<TripDetail> {
   const response = await fetch(`${TRIPS_URL}/${id}/${caminho}`, {
     method: "POST",
@@ -277,9 +313,18 @@ export function registerDocuments(id: string, occurredAt: string): Promise<TripD
   return postEvento(id, "comprovantes", body);
 }
 
-export function settleTitle(id: string, nature: NaturesTitles, occurredAt: string): Promise<TripDetail> {
-  const body: TituloInput = { nature, occurredAt };
+export function settleTitle(id: string, papel: PapelTitulo, occurredAt: string): Promise<TripDetail> {
+  const body: TituloInput = { papel, occurredAt };
   return postEvento(id, "liquidacao", body);
+}
+
+export function cancelTrip(id: string): Promise<TripDetail> {
+  return postEvento(id, "cancelamento", {});
+}
+
+export function scheduleBalance(id: string, scheduledAt: string): Promise<TripDetail> {
+  const body: ProgramacaoInput = { papel: "saldo", scheduledAt };
+  return postEvento(id, "programacao", body);
 }
 
 export function registerAdvance(id: string, occurredAt: string): Promise<TripDetail> {

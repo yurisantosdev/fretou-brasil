@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
-import { hashPassword } from "../lib/password";
+import { hashPassword } from "@fretou/components/password";
 import { UsersResponse, UsersType } from "../types/Users";
 import { User } from "../models/Users";
 

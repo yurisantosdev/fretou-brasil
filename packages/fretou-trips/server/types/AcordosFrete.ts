@@ -6,6 +6,8 @@ export type AcordoFreteType = {
   freteMotorista: number;
   prazoClienteDias: number;
   prazoMotoristaDias: number;
+  adiantamento?: number;
+  saldo?: number;
   createdAt: Date;
   updatedAt: Date;
 };

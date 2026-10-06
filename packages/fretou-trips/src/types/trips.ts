@@ -12,7 +12,9 @@ export const STATUS_TRIP = [
   "CARREGADA",
   "EM_TRANSITO",
   "AGUARDANDO_COMPROVANTE",
+  "AGUARDANDO_PAGAMENTO",
   "FINALIZADA",
+  "CANCELADA",
 ] as const;
 
 export type StatusTrip = (typeof STATUS_TRIP)[number];
@@ -24,6 +26,10 @@ export type DivideShipping = (typeof DIVIDE_SHIPPING)[number];
 export const NATURES_TITLES = ["receber", "pagar"] as const;
 
 export type NaturesTitles = (typeof NATURES_TITLES)[number];
+
+export const PAPEIS_TITULO = ["cliente", "adiantamento", "saldo"] as const;
+
+export type PapelTitulo = (typeof PAPEIS_TITULO)[number];
 
 export const TYPES_VOUCHER = ["FOTO_CARREGAMENTO", "ORIGINAIS"] as const;
 
@@ -102,9 +108,12 @@ export type TripDetail = {
   titles: Array<{
     id: string;
     nature: NaturesTitles;
+    papel?: PapelTitulo;
     value: number;
     expirationDate: string;
     liqiudateDate?: string;
+    scheduledAt?: string;
+    bloqueio?: string;
   }>;
   createdAt: string;
   updatedAt: string;
@@ -152,6 +161,7 @@ export type TripClient = {
   id: string;
   corporateName: string;
   cnpj: string;
+  timePeriod?: string;
 };
 
 export type TripDraft = {
@@ -226,6 +236,11 @@ export type EventoInput = {
 };
 
 export type TituloInput = {
-  nature: NaturesTitles;
+  papel: PapelTitulo;
   occurredAt: string;
+};
+
+export type ProgramacaoInput = {
+  papel: "saldo";
+  scheduledAt: string;
 };

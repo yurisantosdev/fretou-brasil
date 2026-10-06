@@ -14,7 +14,8 @@
     "build:web": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check-types": "tsc -p tsconfig.server.json --noEmit"
+    "check-types": "tsc -p tsconfig.server.json --noEmit",
+    "test": "node --experimental-strip-types --experimental-transform-types --import ./server/register-tests.mjs --test server/domain/regrasViagem.test.ts"
   },
   "peerDependencies": {
     "express": "^5.2.1",

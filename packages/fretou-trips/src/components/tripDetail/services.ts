@@ -1,13 +1,14 @@
 "use client";
 
-import { NaturesTitles } from "@/src/types/trips";
+import { PapelTitulo } from "@/src/types/trips";
 import { TripDetailProps } from "./types";
 import {
   eventoDe,
   nowLocalInput,
+  partiesFromShipping
 } from "../../lib/tripRules";
 import { FormEvent, useState } from "react";
-import { AlertError, AlertSuccess, formatMoney } from "@fretou/components";
+import { AlertError, AlertSuccess, formatDateTime, formatMoney } from "@fretou/components";
 
 export function useTripDetail({
   trip,
@@ -17,6 +18,8 @@ export function useTripDetail({
   onRegisterOriginalDocuments,
   onSettle,
   onRegisterAdvance,
+  onScheduleBalance,
+  onCancelTrip,
 }: TripDetailProps) {
   const inputClass =
     "h-11 w-full rounded-xl border border-line bg-white px-4 text-base text-navy outline-none transition placeholder:text-placeholder focus:border-brand focus:shadow-[0_0_0_4px_rgba(28,68,242,0.14)]";
@@ -52,8 +55,9 @@ export function useTripDetail({
   const foto = trip.vouchers.find((item) => item.type === "FOTO_CARREGAMENTO");
   const comprovantes = trip.vouchers.find((item) => item.type === "ORIGINAIS");
   const descarga = eventoDe(trip, "descarga");
-  const receber = trip.titles.find((item) => item.nature === "receber");
-  const pagar = trip.titles.find((item) => item.nature === "pagar");
+  const receber = trip.titles.find((item) => item.papel === "cliente") ?? trip.titles.find((item) => item.nature === "receber");
+  const adiantamento = trip.titles.find((item) => item.papel === "adiantamento");
+  const saldo = trip.titles.find((item) => item.papel === "saldo");
   const [cteNumber, setCteNumber] = useState(trip.cte?.number ?? "");
   const [cteDate, setCteDate] = useState(trip.cte?.emitted ?? trip.dateLoad);
   const [unloadedAt, setUnloadedAt] = useState(descarga?.occurredAt.slice(0, 16) ?? nowLocalInput());
@@ -61,6 +65,9 @@ export function useTripDetail({
   const [receivedAt, setReceivedAt] = useState(nowLocalInput());
   const [paidAt, setPaidAt] = useState(nowLocalInput());
   const [advanceAt, setAdvanceAt] = useState(nowLocalInput());
+  const [scheduleAt, setScheduleAt] = useState(saldo?.scheduledAt?.slice(0, 16) ?? nowLocalInput());
+  const parties = partiesFromShipping(trip.margem.freteMotorista, trip.divideShipping);
+  const cancelTrip = trip.status === "AGUARDANDO_CTE" && !trip.cte && !foto;
 
   async function emitirCte(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,11 +77,30 @@ export function useTripDetail({
     }
     try {
       await onIssueCte(cteNumber.trim(), cteDate);
-      AlertSuccess("CT-e emitido com sucesso.");
+      AlertSuccess(
+        foto
+          ? "CT-e registrado."
+          : "CT-e registrado. Falta a foto do caminhão carregado. Nenhum título foi gerado.",
+      );
     } catch (err) {
       AlertError(err instanceof Error ? err.message : "Não foi possível registrar o CT-e.");
     }
   }
+
+  function formatAnexo(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return formatDateTime(value);
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+      .format(date)
+      .replace(",", "");
+  }
+
 
   async function enviarFoto(file: File | undefined) {
     if (!file) return;
@@ -85,7 +111,11 @@ export function useTripDetail({
     try {
       const conteudo = await comprimirImagem(file);
       await onAttachPhoto(file.name, new Date().toISOString(), conteudo);
-      AlertSuccess("Foto anexada com sucesso.");
+      AlertSuccess(
+        trip.cte
+          ? "Foto anexada. Adiantamento, saldo e título do cliente foram gerados."
+          : "Foto anexada. Os títulos saem quando o CT-e também estiver registrado.",
+      );
     } catch (err) {
       AlertError(err instanceof Error ? err.message : "Não foi possível anexar a foto.");
     }
@@ -106,14 +136,18 @@ export function useTripDetail({
     }
   }
 
-  async function liquidar(natureza: NaturesTitles, dataHora: string) {
+  async function liquidar(papel: PapelTitulo, dataHora: string) {
+    if (papel === "saldo" && saldo?.bloqueio) {
+      AlertError(saldo.bloqueio);
+      return;
+    }
     if (!dataHora) {
       AlertError("Informe a data e a hora do lançamento.");
       return;
     }
 
     try {
-      await onSettle(natureza, dataHora);
+      await onSettle(papel, dataHora);
       AlertSuccess("Lançamento registrado com sucesso.");
     } catch (err) {
       AlertError(err instanceof Error ? err.message : "Não foi possível registrar o lançamento.");
@@ -135,6 +169,35 @@ export function useTripDetail({
     }
   }
 
+  async function programarSaldo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (saldo?.bloqueio) {
+      AlertError(saldo.bloqueio);
+      return;
+    }
+    if (!scheduleAt) {
+      AlertError("Informe a data e a hora da programação do saldo.");
+      return;
+    }
+    try {
+      await onScheduleBalance(scheduleAt);
+      AlertSuccess("Saldo programado.");
+    } catch (err) {
+      AlertError(err instanceof Error ? err.message : "Não foi possível programar o saldo.");
+    }
+  }
+
+  async function cancelarViagem() {
+    const confirmado = window.confirm("Cancelar esta viagem? Ela ainda não começou.");
+    if (!confirmado) return;
+    try {
+      await onCancelTrip();
+      AlertSuccess("Viagem cancelada.");
+    } catch (err) {
+      AlertError(err instanceof Error ? err.message : "Não foi possível cancelar a viagem.");
+    }
+  }
+
   async function registrarComprovantes(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!documentsAt) {
@@ -151,7 +214,7 @@ export function useTripDetail({
   }
 
   const margem = trip.margem.negativa
-    ? `${formatMoney(trip.margem.margemReais)} negativa`
+    ? `Margem negativa · ${formatMoney(trip.margem.margemReais)}`
     : formatMoney(trip.margem.margemReais);
 
   return {
@@ -159,7 +222,8 @@ export function useTripDetail({
     comprovantes,
     margem,
     receber,
-    pagar,
+    adiantamento,
+    saldo,
     liquidar,
     receivedAt,
     setReceivedAt,
@@ -170,6 +234,10 @@ export function useTripDetail({
     registrarDescarga,
     registrarComprovantes,
     registrarAdiantamento,
+    programarSaldo,
+    cancelarViagem,
+    scheduleAt,
+    setScheduleAt,
     advanceAt,
     setAdvanceAt,
     cteNumber,
@@ -181,6 +249,9 @@ export function useTripDetail({
     unloadedAt,
     documentsAt,
     setUnloadedAt,
-    setDocumentsAt
+    setDocumentsAt,
+    formatAnexo,
+    parties,
+    cancelTrip
   };
 }

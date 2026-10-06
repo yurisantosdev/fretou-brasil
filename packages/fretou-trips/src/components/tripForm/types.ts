@@ -9,4 +9,7 @@ export type TripFormProps = {
   onSubmit: (draft: TripDraft) => Promise<void>;
   onClientCreated: (client: TripClient) => void;
   onDriverCreated: (driver: TripDriver) => void;
+  initial?: TripDraft;
+  submitLabel?: string;
+  successMessage?: string;
 };

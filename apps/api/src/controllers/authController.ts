@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { User } from "@fretou/users/server/models/Users";
-import { comparePassword } from "../lib/password";
+import { comparePassword } from "@fretou/components/password";
 import { signAccessToken } from "../lib/jwt";
 
 export async function login(req: Request, res: Response): Promise<void> {

@@ -20,4 +20,3 @@ export {
 } from "./services/formaters";
 export { DatePicker } from "./components/datePicker";
 export { Tooltip } from "./components/tooltip";
-export { hashPassword, comparePassword } from './services/password'

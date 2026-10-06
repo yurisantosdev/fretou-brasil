@@ -15,7 +15,10 @@ export function TripForm({
   onCancel,
   onSubmit,
   onClientCreated,
-  onDriverCreated
+  onDriverCreated,
+  initial,
+  submitLabel = "Salvar viagem",
+  successMessage,
 }: TripFormProps) {
   const data = useTripForm({
     clients,
@@ -25,7 +28,9 @@ export function TripForm({
     onCancel,
     onSubmit,
     onClientCreated,
-    onDriverCreated
+    onDriverCreated,
+    initial,
+    successMessage,
   });
   if (!data) return null;
   const {
@@ -50,7 +55,6 @@ export function TripForm({
     setLoadingDate,
     setFreightReceivable,
     setFreightPayable,
-    setClientTermDays,
     setDriverTermDays,
     margin,
     saveTrip,
@@ -61,7 +65,7 @@ export function TripForm({
     driverTermDays,
     clientTermDays,
     divideShipping,
-    setDivideShipping
+    setDivideShipping,
   } = data;
 
   return (
@@ -208,8 +212,12 @@ export function TripForm({
               className={inputClass}
               inputMode="numeric"
               value={clientTermDays}
-              onChange={(event) => setClientTermDays(event.target.value)}
+              readOnly
+              aria-readonly="true"
             />
+            <span className="text-xs font-normal text-muted">
+              Vem do prazo cadastrado no cliente. O vencimento é a emissão do CT-e mais esses dias.
+            </span>
           </label>
 
           <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
@@ -257,7 +265,9 @@ export function TripForm({
         </div>
 
         <p className="text-sm font-semibold text-navy">
-          Margem prevista: {margin === null ? "—" : formatMoney(margin)}
+          {margin !== null && margin < 0
+            ? `Margem negativa: ${formatMoney(margin)}`
+            : `Margem prevista: ${margin === null ? "—" : formatMoney(margin)}`}
         </p>
 
         <div className="flex justify-end gap-3 border-t border-line pt-4">
@@ -272,7 +282,7 @@ export function TripForm({
             type="submit"
             className="h-10 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
           >
-            Salvar viagem
+            {submitLabel}
           </button>
         </div>
       </form>

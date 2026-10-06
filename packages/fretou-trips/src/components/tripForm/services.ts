@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { AlertError, AlertSuccess, formatMoneyInput, parseMoney } from "@fretou/components";
+import { FormEvent, useEffect, useState } from "react";
+import { AlertError, AlertSuccess, formatMoney, formatMoneyInput, parseMoney } from "@fretou/components";
 import { TripFormProps } from "./types";
 import { DivideShipping } from "../../types/trips";
 import { createClient, createUser } from "../../services/database.trips.services";
@@ -14,25 +14,33 @@ export function useTripForm({
   onCancel,
   onSubmit,
   onClientCreated,
-  onDriverCreated
+  onDriverCreated,
+  initial,
+  successMessage = "Viagem cadastrada com sucesso.",
 }: TripFormProps) {
   const inputClass =
     "h-11 w-full rounded-xl border border-line bg-white px-4 text-base text-navy outline-none transition placeholder:text-placeholder focus:border-brand focus:shadow-[0_0_0_4px_rgba(28,68,242,0.14)]";
 
-  const [divideShipping, setDivideShipping] = useState<DivideShipping>("50%");
-  const [clientId, setClientId] = useState("");
+  const [divideShipping, setDivideShipping] = useState<DivideShipping>(initial?.divideShipping ?? "50%");
+  const [clientId, setClientId] = useState(initial?.clientId ?? "");
   const [clientModal, setClientModal] = useState(false);
-  const [driverId, setDriverId] = useState("");
+  const [driverId, setDriverId] = useState(initial?.driverId ?? "");
   const [driverModal, setDriverModal] = useState(false);
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
-  const [product, setProduct] = useState("");
-  const [weightKg, setWeightKg] = useState("");
-  const [loadingDate, setLoadingDate] = useState("");
-  const [freightReceivable, setFreightReceivable] = useState("");
-  const [freightPayable, setFreightPayable] = useState("");
-  const [clientTermDays, setClientTermDays] = useState("30");
-  const [driverTermDays, setDriverTermDays] = useState("0");
+  const [origin, setOrigin] = useState(initial?.origin ?? "");
+  const [destination, setDestination] = useState(initial?.destination ?? "");
+  const [product, setProduct] = useState(initial?.product ?? "");
+  const [weightKg, setWeightKg] = useState(initial ? String(initial.weightKg) : "");
+  const [loadingDate, setLoadingDate] = useState(initial?.loadingDate ?? "");
+  const [freightReceivable, setFreightReceivable] = useState(initial ? formatMoney(initial.freightReceivable) : "");
+  const [freightPayable, setFreightPayable] = useState(initial ? formatMoney(initial.freightPayable) : "");
+  const [clientTermDays, setClientTermDays] = useState(initial ? String(initial.clientTermDays) : "");
+
+  useEffect(() => {
+    const cliente = clients.find((item) => item.id === clientId);
+    const dias = cliente?.timePeriod?.match(/\d+/);
+    setClientTermDays(dias?.[0] ?? "");
+  }, [clientId, clients]);
+  const [driverTermDays, setDriverTermDays] = useState(initial ? String(initial.driverTermDays) : "0");
 
   const receivable = parseMoney(freightReceivable);
   const payable = parseMoney(freightPayable);
@@ -78,8 +86,12 @@ export function useTripForm({
       AlertError("Informe o frete a receber e o frete a pagar.");
       return;
     }
-    if (!Number.isInteger(clientTerm) || clientTerm < 0 || !Number.isInteger(driverTerm) || driverTerm < 0) {
-      AlertError("Os prazos precisam ser dias inteiros, a partir de zero.");
+    if (!/^\d+$/.test(clientTermDays)) {
+      AlertError("O cliente precisa ter um prazo em dias cadastrado. Exemplo: 30 dias.");
+      return;
+    }
+    if (!Number.isInteger(driverTerm) || driverTerm < 0) {
+      AlertError("O prazo do motorista precisa ser um número inteiro de dias, a partir de zero.");
       return;
     }
 
@@ -99,7 +111,7 @@ export function useTripForm({
         divideShipping,
       });
 
-      AlertSuccess("Viagem cadastrada com sucesso.");
+      AlertSuccess(successMessage);
     } catch (err) {
       AlertError(err instanceof Error ? err.message : "Não foi possível salvar a viagem.");
     }
@@ -167,6 +179,6 @@ export function useTripForm({
     driverTermDays,
     clientTermDays,
     divideShipping,
-    setDivideShipping
+    setDivideShipping,
   };
 }

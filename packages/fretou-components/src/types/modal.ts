@@ -14,4 +14,5 @@ export type ModalProps = {
   size?: ModalSize;
   panelClassName?: string;
   elevated?: boolean;
+  headerAction?: ReactNode;
 };

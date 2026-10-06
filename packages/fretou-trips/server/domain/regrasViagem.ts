@@ -1,7 +1,7 @@
-import { AcordoFreteType } from "../types/AcordosFrete";
+import type { AcordoFreteType } from "../types/AcordosFrete";
 import { ErroHttp } from "../lib/erroHttp";
-import { NaturesTitles } from "../types/Titles";
-import { DivideShipping, MargemViagem, StatusTrip } from "../types/Trips";
+import type { NaturesTitles, PapelTitulo } from "../types/Titles";
+import type { DivideShipping, MargemViagem, StatusTrip } from "../types/Trips";
 
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 const DATA_HORA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
@@ -12,7 +12,29 @@ export type FatosOperacionais = {
   descarga: boolean;
   comprovantes: boolean;
   carregamentoNoFuturo: boolean;
+  adiantamentoQuitado: boolean;
+  saldoQuitado: boolean;
 };
+
+export function centavosDeReais(valor: number): number {
+  if (!Number.isFinite(valor)) {
+    throw new ErroHttp(400, "Valor monetário inválido");
+  }
+  return Math.round(valor * 100);
+}
+
+export function reaisDeCentavos(centavos: number): number {
+  return centavos / 100;
+}
+
+export function prazoEmDias(valor: unknown): number | null {
+  if (typeof valor === "number" && Number.isInteger(valor) && valor >= 0) return valor;
+  if (typeof valor !== "string") return null;
+  const encontrado = valor.match(/\d+/);
+  if (!encontrado) return null;
+  const dias = Number(encontrado[0]);
+  return Number.isInteger(dias) && dias >= 0 ? dias : null;
+}
 
 export function textoObrigatorio(valor: unknown, campo: string): string {
   if (typeof valor !== "string" || !valor.trim()) {
@@ -59,15 +81,42 @@ export function somarDias(isoDate: string, dias: number): string {
 
 export function resolverEstado(fatos: FatosOperacionais): StatusTrip {
   const prova = fatos.cte && fatos.foto;
+  const documentos = prova && fatos.descarga && fatos.comprovantes;
+  const pagamentos = fatos.adiantamentoQuitado && fatos.saldoQuitado;
 
-  if (prova && fatos.descarga && fatos.comprovantes) return "FINALIZADA";
+  if (documentos && pagamentos) return "FINALIZADA";
+  if (documentos) return "AGUARDANDO_PAGAMENTO";
   if (prova && fatos.descarga) return "AGUARDANDO_COMPROVANTE";
   if (prova) return fatos.carregamentoNoFuturo ? "CARREGADA" : "EM_TRANSITO";
   if (fatos.cte) return "AGUARDANDO_FOTO";
   return "AGUARDANDO_CTE";
 }
 
-export function partesDoFrete(freteMotorista: number, divideShipping: DivideShipping) {
+export function podeEditarViagem(status: StatusTrip): boolean {
+  return status !== "FINALIZADA" && status !== "CANCELADA";
+}
+
+export function motivoCancelamento(fatos: { cte: boolean; foto: boolean; titulos: boolean }): string | null {
+  if (!fatos.cte && !fatos.foto && !fatos.titulos) return null;
+  return "A viagem já começou e não pode ser cancelada.";
+}
+
+export function motivoBloqueioSaldo(
+  fatos: Pick<FatosOperacionais, "descarga" | "comprovantes">,
+  acao: "programar" | "baixar",
+): string | null {
+  if (fatos.descarga && fatos.comprovantes) return null;
+  if (!fatos.descarga) {
+    return acao === "programar"
+      ? "O saldo não pode ser programado antes do registro da descarga."
+      : "O saldo não pode ser baixado antes do registro da descarga.";
+  }
+  return acao === "programar"
+    ? "O saldo não pode ser programado antes da chegada dos comprovantes."
+    : "O saldo não pode ser baixado antes da chegada dos comprovantes.";
+}
+
+export function partiesFromShipping(freteMotorista: number, divideShipping: DivideShipping) {
   const percentual = divideShipping === "70%" ? 70 : 50;
   const totalCentavos = Math.round(freteMotorista * 100);
   const adiantamentoCentavos = Math.round((totalCentavos * percentual) / 100);
@@ -79,36 +128,67 @@ export function partesDoFrete(freteMotorista: number, divideShipping: DivideShip
 }
 
 export function margemDoAcordo(acordo: Pick<AcordoFreteType, "freteCliente" | "freteMotorista">): MargemViagem {
-  const margemReais = acordo.freteCliente - acordo.freteMotorista;
+  const freteCliente = centavosDeReais(acordo.freteCliente);
+  const freteMotorista = centavosDeReais(acordo.freteMotorista);
+  const margemCentavos = freteCliente - freteMotorista;
   const margemPercentual =
-    acordo.freteCliente === 0 ? null : Number(((margemReais / acordo.freteCliente) * 100).toFixed(2));
+    freteCliente === 0 ? null : Math.round((margemCentavos * 10000) / freteCliente) / 100;
 
   return {
-    freteCliente: acordo.freteCliente,
-    freteMotorista: acordo.freteMotorista,
-    margemReais,
+    freteCliente: reaisDeCentavos(freteCliente),
+    freteMotorista: reaisDeCentavos(freteMotorista),
+    margemReais: reaisDeCentavos(margemCentavos),
     margemPercentual,
-    negativa: margemReais < 0,
+    negativa: margemCentavos < 0,
   };
 }
+
+export type TituloPrevisto = {
+  papel: PapelTitulo;
+  nature: NaturesTitles;
+  value: number;
+  expirationDate: string;
+};
 
 export function titulosDaProva(entrada: {
   freteCliente: number;
   freteMotorista: number;
+  divideShipping: DivideShipping;
   prazoClienteDias: number;
   prazoMotoristaDias: number;
   emitted: string;
   received: string;
-}): Array<{ nature: NaturesTitles; value: number; expirationDate: string }> {
+  adiantamento?: number;
+  saldo?: number;
+}): TituloPrevisto[] {
+  const partes = partiesFromShipping(entrada.freteMotorista, entrada.divideShipping);
+  const adiantamentoInformado =
+    typeof entrada.adiantamento === "number" ? centavosDeReais(entrada.adiantamento) : null;
+  const saldoInformado = typeof entrada.saldo === "number" ? centavosDeReais(entrada.saldo) : null;
+  const partesConferem =
+    adiantamentoInformado !== null &&
+    saldoInformado !== null &&
+    adiantamentoInformado + saldoInformado === centavosDeReais(entrada.freteMotorista);
+  const adiantamento = partesConferem ? adiantamentoInformado : centavosDeReais(partes.adiantamento);
+  const saldo = partesConferem ? saldoInformado : centavosDeReais(partes.restante);
+
   return [
     {
+      papel: "cliente",
       nature: "receber",
-      value: entrada.freteCliente,
+      value: reaisDeCentavos(centavosDeReais(entrada.freteCliente)),
       expirationDate: somarDias(entrada.emitted, entrada.prazoClienteDias),
     },
     {
+      papel: "adiantamento",
       nature: "pagar",
-      value: entrada.freteMotorista,
+      value: reaisDeCentavos(adiantamento),
+      expirationDate: somarDias(entrada.received, 0),
+    },
+    {
+      papel: "saldo",
+      nature: "pagar",
+      value: reaisDeCentavos(saldo),
       expirationDate: somarDias(entrada.received, entrada.prazoMotoristaDias),
     },
   ];

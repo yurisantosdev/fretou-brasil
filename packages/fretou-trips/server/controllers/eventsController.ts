@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 import { dataHoraObrigatoria, mesmaCarga } from "../domain/regrasViagem";
-import { ErroHttp } from "../lib/erroHttp";
+import { isDuplicate, ErroHttp } from "../lib/erroHttp";
 import { idDaRota, tratar } from "../lib/http";
 import { Events } from "../models/Events";
 import { TypesEvents } from "../types/Events";
-import { detailTrip, requireTrip, gravarEstado } from "./tripsController";
+import { detailTrip, exigirViagemAtiva, requireTrip, gravarEstado } from "./tripsController";
 
 export async function eventoUnico(
   tripId: mongoose.Types.ObjectId,
@@ -12,10 +12,16 @@ export async function eventoUnico(
   occurredAt: string,
   details: Record<string, unknown>,
 ): Promise<boolean> {
-  const existente = await Events.findOne({ tripId, type }).lean();
-  if (!existente) {
+  try {
     await Events.create({ tripId, type, occurredAt, details });
     return false;
+  } catch (err) {
+    if (!isDuplicate(err)) throw err;
+  }
+
+  const existente = await Events.findOne({ tripId, type }).lean();
+  if (!existente) {
+    throw new ErroHttp(409, "Este evento já foi registrado");
   }
   const dadosAtuais =
     existente.details && typeof existente.details === "object" && !Array.isArray(existente.details)
@@ -29,6 +35,7 @@ export async function eventoUnico(
 
 export const registerUnload = tratar(async (req, res) => {
   const viagem = await requireTrip(idDaRota(req.params.id));
+  exigirViagemAtiva(viagem);
   const occurredAt = dataHoraObrigatoria(req.body.occurredAt, "occurredAt");
   if (occurredAt.slice(0, 10) < viagem.dateLoad) {
     throw new ErroHttp(422, "A descarga não pode ser anterior ao carregamento");

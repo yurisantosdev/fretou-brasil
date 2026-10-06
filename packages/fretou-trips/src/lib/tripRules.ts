@@ -6,7 +6,9 @@ export const STATUS_LABEL: Record<StatusTrip, string> = {
   CARREGADA: "Carregada",
   EM_TRANSITO: "Em trânsito",
   AGUARDANDO_COMPROVANTE: "Aguardando comprovante",
+  AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
   FINALIZADA: "Finalizada",
+  CANCELADA: "Cancelada",
 };
 
 export function todayISO(reference = new Date()): string {
@@ -22,7 +24,7 @@ export function nowLocalInput(reference = new Date()): string {
   return `${todayISO(reference)}T${hours}:${minutes}`;
 }
 
-export function partesDoFrete(freteMotorista: number, divideShipping: DivideShipping) {
+export function partiesFromShipping(freteMotorista: number, divideShipping: DivideShipping) {
   const percentual = divideShipping === "70%" ? 70 : 50;
   const totalCentavos = Math.round(freteMotorista * 100);
   const adiantamentoCentavos = Math.round((totalCentavos * percentual) / 100);
@@ -33,27 +35,42 @@ export function partesDoFrete(freteMotorista: number, divideShipping: DivideShip
   };
 }
 
-export function codigoViagem(id: string): string {
+export function codeTrip(id: string): string {
   return id.slice(-6).toUpperCase();
 }
 
 export function codigoExibido(trip: { _id: string; codigo?: string }): string {
-  return trip.codigo || codigoViagem(String(trip._id));
+  return trip.codigo || codeTrip(String(trip._id));
 }
 
 export function eventoDe(trip: TripDetail, tipo: TripDetail["events"][number]["type"]) {
   return trip.events.find((item) => item.type === tipo);
 }
 
-type TituloResumo = { nature: string; liqiudateDate?: string };
+type TituloResumo = {
+  nature: string;
+  papel?: string;
+  value?: number;
+  liqiudateDate?: string;
+  bloqueio?: string;
+  expirationDate?: string;
+};
+
+function tituloCliente(titles: TituloResumo[]) {
+  return titles.find((item) => item.papel === "cliente") ?? titles.find((item) => item.nature === "receber");
+}
+
+function titulosMotorista(titles: TituloResumo[]) {
+  return titles.filter((item) => item.papel === "adiantamento" || item.papel === "saldo" || (item.nature === "pagar" && !item.papel));
+}
 
 export function saldoAReceber(trip: {
   margem: Pick<MargemViagem, "freteCliente">;
   titles: TituloResumo[];
 }): number {
-  const receber = trip.titles.find((item) => item.nature === "receber");
+  const receber = tituloCliente(trip.titles);
   if (receber?.liqiudateDate) return 0;
-  return trip.margem.freteCliente;
+  return receber?.value ?? trip.margem.freteCliente;
 }
 
 export function saldoAPagar(trip: {
@@ -62,12 +79,9 @@ export function saldoAPagar(trip: {
   advancePaidAt?: string;
   titles: TituloResumo[];
 }): number {
-  const pagar = trip.titles.find((item) => item.nature === "pagar");
-  if (pagar?.liqiudateDate) return 0;
-  if (trip.advancePaidAt) {
-    return partesDoFrete(trip.margem.freteMotorista, trip.divideShipping).restante;
-  }
-  return trip.margem.freteMotorista;
+  const pagar = titulosMotorista(trip.titles);
+  if (pagar.length === 0) return trip.margem.freteMotorista;
+  return pagar.filter((item) => !item.liqiudateDate).reduce((soma, item) => soma + (item.value ?? 0), 0);
 }
 
 function motivoTravado(status: StatusTrip): string {
@@ -80,15 +94,6 @@ function motivoTravado(status: StatusTrip): string {
   return "Os títulos ainda não foram gerados.";
 }
 
-function motivoEmAberto(trip: TripListItem, leg: "receber" | "pagar"): string {
-  if (leg === "pagar" && trip.advancePaidAt) {
-    const { percentual } = partesDoFrete(trip.margem.freteMotorista, trip.divideShipping);
-    return `Adiantamento de ${percentual}% já pago. Falta registrar o restante ao motorista.`;
-  }
-  if (leg === "pagar") return "Falta registrar o pagamento ao motorista.";
-  return "Falta registrar o recebimento do cliente.";
-}
-
 export function summarize(trips: TripListItem[], today = todayISO()): FinanceSummary {
   let payToday = 0;
   let payOpen = 0;
@@ -98,15 +103,15 @@ export function summarize(trips: TripListItem[], today = todayISO()): FinanceSum
   const locked: LockedBalance[] = [];
 
   for (const trip of trips) {
+    if (trip.status === "CANCELADA") continue;
     const id = String(trip._id);
     margin += trip.margem.margemReais;
     const label = codigoExibido(trip);
-    const receber = trip.titles.find((item) => item.nature === "receber");
-    const pagar = trip.titles.find((item) => item.nature === "pagar");
-    const receberAberto = saldoAReceber(trip);
-    const pagarAberto = saldoAPagar(trip);
+    const receber = tituloCliente(trip.titles);
+    const motorista = titulosMotorista(trip.titles);
 
     if (!receber) {
+      const receberAberto = saldoAReceber(trip);
       if (receberAberto > 0) {
         locked.push({
           id: `${id}-receber`,
@@ -118,21 +123,12 @@ export function summarize(trips: TripListItem[], today = todayISO()): FinanceSum
         });
       }
     } else if (!receber.liqiudateDate) {
-      receiveOpen += receber.value;
-      if (receber.expirationDate <= today) receiveToday += receber.value;
-      if (receberAberto > 0) {
-        locked.push({
-          id: `${id}-receber`,
-          tripId: id,
-          label,
-          leg: "A receber",
-          amount: receberAberto,
-          reason: motivoEmAberto(trip, "receber"),
-        });
-      }
+      receiveOpen += receber.value ?? 0;
+      if ((receber.expirationDate ?? "") <= today) receiveToday += receber.value ?? 0;
     }
 
-    if (!pagar) {
+    if (motorista.length === 0) {
+      const pagarAberto = saldoAPagar(trip);
       if (pagarAberto > 0) {
         locked.push({
           id: `${id}-pagar`,
@@ -143,19 +139,24 @@ export function summarize(trips: TripListItem[], today = todayISO()): FinanceSum
           reason: motivoTravado(trip.status),
         });
       }
-    } else if (!pagar.liqiudateDate) {
-      payOpen += pagar.value;
-      if (pagar.expirationDate <= today) payToday += pagar.value;
-      if (pagarAberto > 0) {
+    }
+
+    for (const titulo of motorista) {
+      if (titulo.liqiudateDate) continue;
+      const valor = titulo.value ?? 0;
+      if (titulo.bloqueio) {
         locked.push({
-          id: `${id}-pagar`,
+          id: `${id}-${titulo.papel ?? "pagar"}`,
           tripId: id,
           label,
           leg: "A pagar",
-          amount: pagarAberto,
-          reason: motivoEmAberto(trip, "pagar"),
+          amount: valor,
+          reason: titulo.bloqueio,
         });
+        continue;
       }
+      payOpen += valor;
+      if ((titulo.expirationDate ?? "") <= today) payToday += valor;
     }
   }
 
@@ -168,8 +169,14 @@ export function estadoHint(trip: TripDetail): string {
   const descarga = trip.events.some((item) => item.type === "descarga");
   const comprovantes = trip.vouchers.some((item) => item.type === "ORIGINAIS");
 
+  if (trip.status === "CANCELADA") {
+    return "Viagem cancelada antes de começar. CT-e e foto não foram registrados.";
+  }
   if (trip.status === "FINALIZADA") {
-    return "CT-e, foto, descarga e comprovantes originais registrados. A ordem em que chegaram não muda este estado.";
+    return "CT-e, foto, descarga, comprovantes e as baixas do adiantamento e do saldo registrados.";
+  }
+  if (trip.status === "AGUARDANDO_PAGAMENTO") {
+    return "Documentos completos. A viagem finaliza quando o adiantamento e o saldo do motorista forem baixados.";
   }
   if (trip.status === "AGUARDANDO_COMPROVANTE") {
     return "Descarga registrada com CT-e e foto. Falta a chegada dos comprovantes originais.";

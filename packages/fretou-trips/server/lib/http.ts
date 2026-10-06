@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { ehDuplicidade, ErroHttp } from "./erroHttp";
+import { isDuplicate, ErroHttp } from "./erroHttp";
 
 export function idDaRota(valor: string | string[] | undefined): string {
   const id = Array.isArray(valor) ? valor[0] : valor;
@@ -13,7 +13,7 @@ export function tratar(acao: (req: Request, res: Response) => Promise<void>) {
         res.status(err.status).json({ erro: err.message });
         return;
       }
-      if (ehDuplicidade(err)) {
+      if (isDuplicate(err)) {
         res.status(409).json({ erro: "Este lançamento já existe para a viagem" });
         return;
       }

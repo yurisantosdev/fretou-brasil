@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { TypesEvents } from "./Events";
-import { NaturesTitles } from "./Titles";
+import type { NaturesTitles, PapelTitulo } from "./Titles";
 import { TypesVoucher } from "./Vouchers";
 
 export type MargemViagem = {
@@ -17,7 +17,9 @@ export const STATUS_TRIP = [
   "CARREGADA",
   "EM_TRANSITO",
   "AGUARDANDO_COMPROVANTE",
+  "AGUARDANDO_PAGAMENTO",
   "FINALIZADA",
+  "CANCELADA",
 ] as const;
 
 export type StatusTrip = (typeof STATUS_TRIP)[number];
@@ -93,9 +95,12 @@ export type TripDetail = {
   titles: Array<{
     id: string;
     nature: NaturesTitles;
+    papel?: PapelTitulo;
     value: number;
     expirationDate: string;
     liqiudateDate?: string;
+    scheduledAt?: string;
+    bloqueio?: string;
   }>;
   createdAt: string;
   updatedAt: string;
