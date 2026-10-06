@@ -128,6 +128,7 @@ export function useTrips() {
       shipping: detalhe.shipping,
       divideShipping: detalhe.divideShipping,
       codigo: detalhe.codigo,
+      advancePaidAt: detalhe.advancePaidAt,
       margem: detalhe.margem,
       titles: detalhe.titles,
     };

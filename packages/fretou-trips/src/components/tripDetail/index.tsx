@@ -3,6 +3,8 @@
 import {
   estadoHint,
   partesDoFrete,
+  saldoAPagar,
+  saldoAReceber,
   STATUS_LABEL,
 } from "../../lib/tripRules";
 import { DatePicker, formatDate, formatDateTime, formatMoney, formatWeight } from "@fretou/components";
@@ -95,16 +97,8 @@ export function TripDetail({
       </section>
 
       <section className="grid gap-4 rounded-2xl border border-line p-4 sm:grid-cols-3">
-        <Field
-          label="Frete a receber"
-          value={formatMoney(receber?.liqiudateDate ? 0 : trip.margem.freteCliente)}
-        />
-        <Field
-          label="Frete a pagar"
-          value={formatMoney(
-            pagar?.liqiudateDate ? 0 : trip.advancePaidAt ? partes.restante : trip.margem.freteMotorista,
-          )}
-        />
+        <Field label="Frete a receber" value={formatMoney(saldoAReceber(trip))} />
+        <Field label="Frete a pagar" value={formatMoney(saldoAPagar(trip))} />
         <Field label="Divisão do frete ao motorista" value={trip.divideShipping || "—"} />
         <Field label="Margem da viagem" value={margem} />
         <Field
@@ -125,6 +119,7 @@ export function TripDetail({
           label="Prazos"
           value={`Cliente ${trip.acordoFrete.prazoClienteDias} dia(s) após o CT-e · Motorista ${trip.acordoFrete.prazoMotoristaDias} dia(s) após a foto`}
         />
+
         <div className="flex flex-col gap-4 border-t border-line pt-4 sm:col-span-3">
           <form className="flex flex-col gap-3" onSubmit={registrarAdiantamento}>
             <p className="text-sm font-bold text-navy">

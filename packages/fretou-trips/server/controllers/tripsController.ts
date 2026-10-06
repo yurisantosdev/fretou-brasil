@@ -49,6 +49,7 @@ export function serializar(trip: TripsType): TripsResponse {
     shipping: trip.shipping,
     divideShipping: trip.divideShipping,
     codigo: trip.codigo,
+    advancePaidAt: trip.advancePaidAt,
   };
 }
 

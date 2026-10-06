@@ -54,6 +54,7 @@ export type TripsType = {
   shipping: number;
   divideShipping: DivideShipping;
   codigo?: string;
+  advancePaidAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -74,6 +75,7 @@ export type TripsResponse = {
   shipping: number;
   divideShipping: DivideShipping;
   codigo?: string;
+  advancePaidAt?: string;
 };
 
 export type TripDetail = {

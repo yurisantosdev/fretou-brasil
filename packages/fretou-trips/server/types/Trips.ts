@@ -66,6 +66,7 @@ export type TripsResponse = {
   shipping: number;
   divideShipping: DivideShipping;
   codigo: string;
+  advancePaidAt?: string;
 };
 
 export type TripDetail = {

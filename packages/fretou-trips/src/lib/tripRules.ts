@@ -1,4 +1,4 @@
-import { DivideShipping, FinanceSummary, LockedBalance, StatusTrip, TripDetail, TripListItem } from "../types/trips";
+import { DivideShipping, FinanceSummary, LockedBalance, MargemViagem, StatusTrip, TripDetail, TripListItem } from "../types/trips";
 
 export const STATUS_LABEL: Record<StatusTrip, string> = {
   AGUARDANDO_CTE: "Aguardando CT-e",
@@ -45,6 +45,31 @@ export function eventoDe(trip: TripDetail, tipo: TripDetail["events"][number]["t
   return trip.events.find((item) => item.type === tipo);
 }
 
+type TituloResumo = { nature: string; liqiudateDate?: string };
+
+export function saldoAReceber(trip: {
+  margem: Pick<MargemViagem, "freteCliente">;
+  titles: TituloResumo[];
+}): number {
+  const receber = trip.titles.find((item) => item.nature === "receber");
+  if (receber?.liqiudateDate) return 0;
+  return trip.margem.freteCliente;
+}
+
+export function saldoAPagar(trip: {
+  margem: Pick<MargemViagem, "freteMotorista">;
+  divideShipping: DivideShipping;
+  advancePaidAt?: string;
+  titles: TituloResumo[];
+}): number {
+  const pagar = trip.titles.find((item) => item.nature === "pagar");
+  if (pagar?.liqiudateDate) return 0;
+  if (trip.advancePaidAt) {
+    return partesDoFrete(trip.margem.freteMotorista, trip.divideShipping).restante;
+  }
+  return trip.margem.freteMotorista;
+}
+
 function motivoTravado(status: StatusTrip): string {
   if (status === "AGUARDANDO_FOTO") {
     return "Aguardando a foto do caminhão carregado. Os títulos saem quando CT-e e foto estiverem juntos.";
@@ -53,6 +78,15 @@ function motivoTravado(status: StatusTrip): string {
     return "Aguardando o CT-e. Os títulos saem quando CT-e e foto estiverem juntos.";
   }
   return "Os títulos ainda não foram gerados.";
+}
+
+function motivoEmAberto(trip: TripListItem, leg: "receber" | "pagar"): string {
+  if (leg === "pagar" && trip.advancePaidAt) {
+    const { percentual } = partesDoFrete(trip.margem.freteMotorista, trip.divideShipping);
+    return `Adiantamento de ${percentual}% já pago. Falta registrar o restante ao motorista.`;
+  }
+  if (leg === "pagar") return "Falta registrar o pagamento ao motorista.";
+  return "Falta registrar o recebimento do cliente.";
 }
 
 export function summarize(trips: TripListItem[], today = todayISO()): FinanceSummary {
@@ -69,33 +103,59 @@ export function summarize(trips: TripListItem[], today = todayISO()): FinanceSum
     const label = codigoExibido(trip);
     const receber = trip.titles.find((item) => item.nature === "receber");
     const pagar = trip.titles.find((item) => item.nature === "pagar");
+    const receberAberto = saldoAReceber(trip);
+    const pagarAberto = saldoAPagar(trip);
 
     if (!receber) {
-      locked.push({
-        id: `${id}-receber`,
-        tripId: id,
-        label,
-        leg: "A receber",
-        amount: trip.margem.freteCliente,
-        reason: motivoTravado(trip.status),
-      });
+      if (receberAberto > 0) {
+        locked.push({
+          id: `${id}-receber`,
+          tripId: id,
+          label,
+          leg: "A receber",
+          amount: receberAberto,
+          reason: motivoTravado(trip.status),
+        });
+      }
     } else if (!receber.liqiudateDate) {
       receiveOpen += receber.value;
       if (receber.expirationDate <= today) receiveToday += receber.value;
+      if (receberAberto > 0) {
+        locked.push({
+          id: `${id}-receber`,
+          tripId: id,
+          label,
+          leg: "A receber",
+          amount: receberAberto,
+          reason: motivoEmAberto(trip, "receber"),
+        });
+      }
     }
 
     if (!pagar) {
-      locked.push({
-        id: `${id}-pagar`,
-        tripId: id,
-        label,
-        leg: "A pagar",
-        amount: trip.margem.freteMotorista,
-        reason: motivoTravado(trip.status),
-      });
+      if (pagarAberto > 0) {
+        locked.push({
+          id: `${id}-pagar`,
+          tripId: id,
+          label,
+          leg: "A pagar",
+          amount: pagarAberto,
+          reason: motivoTravado(trip.status),
+        });
+      }
     } else if (!pagar.liqiudateDate) {
       payOpen += pagar.value;
       if (pagar.expirationDate <= today) payToday += pagar.value;
+      if (pagarAberto > 0) {
+        locked.push({
+          id: `${id}-pagar`,
+          tripId: id,
+          label,
+          leg: "A pagar",
+          amount: pagarAberto,
+          reason: motivoEmAberto(trip, "pagar"),
+        });
+      }
     }
   }
 
