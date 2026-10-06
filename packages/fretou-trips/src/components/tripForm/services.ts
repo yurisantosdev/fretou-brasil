@@ -117,7 +117,12 @@ export function useTripForm({
     }
   }
 
-  async function saveClient(data: { corporateName: string; cnpj: string; timePeriod: string }) {
+  async function saveClient(data: {
+    corporateName: string;
+    cnpj: string;
+    timePeriod: string;
+    active: boolean;
+  }) {
     const created = await createClient(data);
     onClientCreated(created);
     setClientId(created.id);

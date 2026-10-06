@@ -18,6 +18,11 @@ const clientsSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    active: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
   },
   {
     timestamps: true,

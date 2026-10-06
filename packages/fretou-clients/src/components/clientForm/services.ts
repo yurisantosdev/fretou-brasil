@@ -15,6 +15,7 @@ export function useClientForm({
   const [corporateName, setCorporateName] = useState(client?.corporateName ?? "");
   const [cnpj, setCnpj] = useState(formatCnpjInput(client?.cnpj ?? ""));
   const [timePeriod, setTimePeriod] = useState(client?.timePeriod ?? "");
+  const [active, setActive] = useState(client?.active !== false);
   const [erro, setErro] = useState("");
 
   async function saveClient(event: FormEvent<HTMLFormElement>) {
@@ -37,7 +38,7 @@ export function useClientForm({
 
     setErro("");
     try {
-      await onSubmit({ corporateName, cnpj, timePeriod });
+      await onSubmit({ corporateName, cnpj, timePeriod, active });
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Não foi possível salvar o cliente.");
     }
@@ -52,6 +53,8 @@ export function useClientForm({
     setCnpj,
     timePeriod,
     setTimePeriod,
+    active,
+    setActive,
     erro
   };
 }

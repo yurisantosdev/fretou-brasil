@@ -294,3 +294,14 @@ Depois, acesse:
 http://localhost:3000
 
 ```
+
+  
+
+## 🔮 Itens que poderemos realizar no futuro
+
+```bash
+- Vincular mais de um cliente por viagem (acredito que normalmente ocorre isso)
+	- Com isso podemos colocar um valor do frete do cliente igual para todos, ou podemos ter um valor por quilometro ou peso ou até mesmo os dois valores e verificar esse valor por cliente
+- Juntar todos os valores para termos o valor total do frete a receber (isso básicamente conseguimos ajustar de forma simple)
+  
+```

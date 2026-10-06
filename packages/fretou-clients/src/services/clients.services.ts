@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClients, listClients, updateClients } from "./database.clients.services";
-import { Client, ClientFormData } from "../types/clients";
+import { Client, ClientFormData, ClientStatusFilter } from "../types/clients";
 import { AlertError, AlertSuccess } from "@fretou/components";
 
 export function useClients() {
@@ -11,6 +11,8 @@ export function useClients() {
   const [createModal, setCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<ClientStatusFilter>("todos");
   const openModal = createModal || clientOpen !== null;
 
   function normalize(client: Client): Client {
@@ -51,8 +53,27 @@ export function useClients() {
       corporateName: data.corporateName.trim(),
       cnpj: data.cnpj.replace(/\D/g, ""),
       timePeriod: data.timePeriod.trim(),
+      active: data.active,
     };
   }
+
+  const filteredClients = useMemo(() => {
+    const termo = search.trim().toLocaleLowerCase("pt-BR");
+    const digits = termo.replace(/\D/g, "");
+
+    return clients.filter((client) => {
+      if (statusFilter === "ativos" && client.active === false) return false;
+      if (statusFilter === "inativos" && client.active !== false) return false;
+      if (!termo) return true;
+
+      const name = client.corporateName.toLocaleLowerCase("pt-BR");
+      const cnpj = client.cnpj.replace(/\D/g, "");
+      const period = client.timePeriod.toLocaleLowerCase("pt-BR");
+      const matchCnpj = digits.length > 0 && cnpj.includes(digits);
+
+      return name.includes(termo) || period.includes(termo) || matchCnpj;
+    });
+  }, [clients, search, statusFilter]);
 
   function closeModal() {
     setCreateModal(false);
@@ -86,7 +107,11 @@ export function useClients() {
   }
 
   return {
-    clients,
+    clients: filteredClients,
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
     setClientOpen,
     setCreateModal,
     openModal,

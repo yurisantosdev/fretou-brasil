@@ -9,6 +9,7 @@ export function serializar(client: ClientsType): ClientsResponse {
     corporateName: client.corporateName,
     cnpj: client.cnpj,
     timePeriod: client.timePeriod,
+    active: client.active,
   };
 }
 

@@ -109,7 +109,9 @@ export async function listClients(signal: AbortSignal): Promise<TripClient[]> {
     throw new Error("Resposta inválida da API de clientes");
   }
 
-  return (data as Client[]).map((client) => ({
+  return (data as Client[])
+    .filter((client) => client.active !== false)
+    .map((client) => ({
     id: String(client._id),
     corporateName: client.corporateName,
     cnpj: client.cnpj,
@@ -121,6 +123,7 @@ export async function createClient(input: {
   corporateName: string;
   cnpj: string;
   timePeriod: string;
+  active?: boolean;
 }): Promise<TripClient> {
   const response = await fetch(CLIENTS_URL, {
     method: "POST",
@@ -133,6 +136,7 @@ export async function createClient(input: {
       corporateName: input.corporateName.trim(),
       cnpj: input.cnpj.replace(/\D/g, ""),
       timePeriod: input.timePeriod.trim(),
+      active: input.active !== false,
     }),
   });
 

@@ -5,6 +5,7 @@ export type ClientsType = {
   corporateName: string;
   cnpj: string;
   timePeriod: string;
+  active: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -14,4 +15,5 @@ export type ClientsResponse = {
   corporateName: string;
   cnpj: string;
   timePeriod: string;
+  active: boolean;
 };
