@@ -154,6 +154,7 @@ export type TripListItem = TripsResponse & {
 export type TripDriver = {
   id: string;
   name: string;
+  thirdParty?: boolean;
   plateVehicle?: string;
 };
 

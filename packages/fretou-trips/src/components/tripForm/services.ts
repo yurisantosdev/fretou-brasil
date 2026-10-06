@@ -135,6 +135,7 @@ export function useTripForm({
     cpf: string;
     password: string;
     driver: boolean;
+    thirdParty: boolean;
     plateVehicle: string;
     keyPix: string;
     active: boolean;
@@ -144,6 +145,7 @@ export function useTripForm({
       const driver = {
         id: String(created._id),
         name: created.name,
+        thirdParty: created.thirdParty === true,
         plateVehicle: created.plateVehicle,
       };
       onDriverCreated(driver);

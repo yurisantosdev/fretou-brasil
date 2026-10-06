@@ -45,19 +45,20 @@ export function useProfile({
       return;
     }
 
-    if (account.driver && !plateVehicle.trim()) {
+    if (account.thirdParty && !plateVehicle.trim()) {
       setErro("Informe a placa do veículo.");
       return;
     }
 
     const senhaNova = password.trim();
-    const placa = plateVehicle.trim().toUpperCase();
+    const placa = account.thirdParty ? plateVehicle.trim().toUpperCase() : "";
     const pix = keyPix.trim();
     const user: User = {
       _id: account.id,
       name: name.trim(),
       cpf: account.cpf,
       driver: account.driver,
+      thirdParty: account.driver && account.thirdParty === true,
       plateVehicle: placa,
       ...(account.driver ? { keyPix: pix } : {}),
       ...(senhaNova ? { password: senhaNova } : {}),

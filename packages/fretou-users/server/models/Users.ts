@@ -18,6 +18,11 @@ const usersSchema = new mongoose.Schema(
       required: true,
       default: true,
     },
+    thirdParty: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     cpf: {
       type: String,
       required: false,

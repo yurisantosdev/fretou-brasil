@@ -19,12 +19,14 @@ export function useUserForm({
   const pixId = useId();
   const plateId = useId();
   const driverId = useId();
+  const thirdPartyId = useId();
   const activeId = useId();
 
   const [name, setName] = useState(user?.name ?? "");
   const [cpf, setCpf] = useState(formatCpf(user?.cpf ?? ""));
   const [password, setPassword] = useState("");
   const [driver, setDriver] = useState(user?.driver ?? defaultDriver);
+  const [thirdParty, setThirdParty] = useState(user?.thirdParty ?? false);
   const [plateVehicle, setPlateVehicle] = useState(user?.plateVehicle ?? "");
   const [keyPix, setKeyPix] = useState(user?.keyPix ?? "");
   const [active, setActive] = useState(user?.active !== false);
@@ -48,14 +50,23 @@ export function useUserForm({
       return;
     }
 
-    if (driver && !plateVehicle.trim()) {
+    if (driver && thirdParty && !plateVehicle.trim()) {
       setErro("Informe a placa do veículo.");
       return;
     }
 
     setErro("");
     try {
-      await onSubmit({ name, cpf, password, driver, plateVehicle, keyPix, active });
+      await onSubmit({
+        name,
+        cpf,
+        password,
+        driver,
+        thirdParty: driver && thirdParty,
+        plateVehicle: driver && thirdParty ? plateVehicle : "",
+        keyPix,
+        active,
+      });
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Não foi possível salvar o usuário.");
     }
@@ -72,6 +83,8 @@ export function useUserForm({
     setPassword,
     driver,
     setDriver,
+    thirdParty,
+    setThirdParty,
     plateVehicle,
     setPlateVehicle,
     keyPix,
@@ -84,6 +97,7 @@ export function useUserForm({
     passwordId,
     pixId,
     driverId,
+    thirdPartyId,
     activeId,
     plateId
   };

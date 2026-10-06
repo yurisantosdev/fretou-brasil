@@ -21,8 +21,8 @@ export function UsersPage() {
     error,
     search,
     setSearch,
-    onlyDrivers,
-    setOnlyDrivers,
+    kindFilter,
+    setKindFilter,
     statusFilter,
     setStatusFilter,
   } = data;
@@ -90,36 +90,52 @@ export function UsersPage() {
                 onChange={(event) => setSearch(event.target.value)}
               />
             </label>
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <label className="flex h-10 items-center gap-3 text-sm font-semibold text-navy">
-                <input
-                  type="checkbox"
-                  className="size-4 accent-brand"
-                  checked={onlyDrivers}
-                  onChange={(event) => setOnlyDrivers(event.target.checked)}
-                />
-                Somente motoristas
-              </label>
-              <fieldset className="flex flex-wrap items-center gap-4">
-                <legend className="sr-only">Status</legend>
-                {(
-                  [
-                    ["todos", "Todos"],
-                    ["ativos", "Ativos"],
-                    ["inativos", "Desativados"],
-                  ] as const
-                ).map(([value, label]) => (
-                  <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
-                    <input
-                      type="radio"
-                      name="status-usuario"
-                      className="size-4 accent-brand"
-                      checked={statusFilter === value}
-                      onChange={() => setStatusFilter(value)}
-                    />
-                    {label}
-                  </label>
-                ))}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <fieldset className="flex flex-col gap-2 rounded-xl border border-line bg-canvas/60 px-4 py-3">
+                <legend className="px-1 text-sm text-navy">Tipo</legend>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  {(
+                    [
+                      ["todos", "Todos"],
+                      ["empresa", "Motoristas da empresa"],
+                      ["terceiros", "Terceiros"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
+                      <input
+                        type="radio"
+                        name="tipo-usuario"
+                        className="size-4 accent-brand"
+                        checked={kindFilter === value}
+                        onChange={() => setKindFilter(value)}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset className="flex flex-col gap-2 rounded-xl border border-line bg-canvas/60 px-4 py-3">
+                <legend className="px-1 text-sm text-navy">Status</legend>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  {(
+                    [
+                      ["todos", "Todos"],
+                      ["ativos", "Ativos"],
+                      ["inativos", "Desativados"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
+                      <input
+                        type="radio"
+                        name="status-usuario"
+                        className="size-4 accent-brand"
+                        checked={statusFilter === value}
+                        onChange={() => setStatusFilter(value)}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
               </fieldset>
             </div>
           </div>
@@ -139,6 +155,17 @@ export function UsersPage() {
                       }`}
                   >
                     {user.driver ? "Sim" : "Não"}
+                  </span>
+                ),
+              },
+              {
+                header: "Terceiro",
+                cell: (user) => (
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${user.thirdParty ? "bg-brand/10 text-brand" : "bg-canvas text-muted"
+                      }`}
+                  >
+                    {user.thirdParty ? "Sim" : "Não"}
                   </span>
                 ),
               },

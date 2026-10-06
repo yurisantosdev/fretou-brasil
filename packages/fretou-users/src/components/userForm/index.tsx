@@ -29,6 +29,8 @@ export function UserForm({
     setPassword,
     driver,
     setDriver,
+    thirdParty,
+    setThirdParty,
     plateVehicle,
     setPlateVehicle,
     keyPix,
@@ -41,6 +43,7 @@ export function UserForm({
     passwordId,
     pixId,
     driverId,
+    thirdPartyId,
     activeId,
     plateId
   } = data;
@@ -128,7 +131,10 @@ export function UserForm({
             checked={driver}
             onChange={(event) => {
               setDriver(event.target.checked);
-              if (!event.target.checked) setPlateVehicle("");
+              if (!event.target.checked) {
+                setThirdParty(false);
+                setPlateVehicle("");
+              }
             }}
           />
           <span>
@@ -140,6 +146,27 @@ export function UserForm({
         </label>
 
         {driver ? (
+          <label htmlFor={thirdPartyId} className="flex cursor-pointer items-start gap-3 sm:max-w-md">
+            <input
+              id={thirdPartyId}
+              type="checkbox"
+              className="mt-0.5 size-4 accent-brand"
+              checked={thirdParty}
+              onChange={(event) => {
+                setThirdParty(event.target.checked);
+                if (!event.target.checked) setPlateVehicle("");
+              }}
+            />
+            <span>
+              <span className="block text-sm font-semibold text-navy">Motorista terceiro</span>
+              <span className="mt-1 block text-sm font-normal text-muted">
+                Usa veículo próprio. A placa só é pedida neste caso.
+              </span>
+            </span>
+          </label>
+        ) : null}
+
+        {driver && thirdParty ? (
           <label htmlFor={plateId} className="flex flex-col gap-2 text-sm font-semibold text-navy sm:max-w-xs">
             Placa
             <input

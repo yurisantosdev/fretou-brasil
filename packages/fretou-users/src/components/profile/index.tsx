@@ -58,7 +58,11 @@ export function Profile({
         }}
         eyebrow="Conta"
         title="Meu perfil"
-        description="Atualize seus dados de acesso e do veículo."
+        description={
+          account.thirdParty
+            ? "Atualize seus dados de acesso e a placa do veículo."
+            : "Atualize seus dados de acesso."
+        }
       >
         <form className="flex flex-col gap-6 px-5 py-5 sm:px-6" onSubmit={saveUserProfile} noValidate>
           <label htmlFor={nameId} className="flex flex-col gap-2 text-sm font-semibold text-navy">
@@ -99,17 +103,19 @@ export function Profile({
             </span>
           </label>
 
-          <label htmlFor={plateId} className="flex flex-col gap-2 text-sm font-semibold text-navy">
-            Placa do veículo
-            <input
-              id={plateId}
-              className={inputClass}
-              value={plateVehicle}
-              autoComplete="off"
-              placeholder="ABC1D23"
-              onChange={(event) => setPlateVehicle(event.target.value.toUpperCase())}
-            />
-          </label>
+          {account.thirdParty ? (
+            <label htmlFor={plateId} className="flex flex-col gap-2 text-sm font-semibold text-navy">
+              Placa do veículo
+              <input
+                id={plateId}
+                className={inputClass}
+                value={plateVehicle}
+                autoComplete="off"
+                placeholder="ABC1D23"
+                onChange={(event) => setPlateVehicle(event.target.value.toUpperCase())}
+              />
+            </label>
+          ) : null}
 
           {account.driver ? (
             <label htmlFor={pixId} className="flex flex-col gap-2 text-sm font-semibold text-navy">

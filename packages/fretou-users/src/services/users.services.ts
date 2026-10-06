@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createUsers, listUsers, updateUsers } from "./database.users.services";
-import { User, UserFormData, UserStatusFilter } from "../types/users";
+import { User, UserFormData, UserKindFilter, UserStatusFilter } from "../types/users";
 import { AlertError, AlertSuccess } from "@fretou/components";
 
 export function useUsers() {
@@ -12,7 +12,7 @@ export function useUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [onlyDrivers, setOnlyDrivers] = useState(false);
+  const [kindFilter, setKindFilter] = useState<UserKindFilter>("todos");
   const [statusFilter, setStatusFilter] = useState<UserStatusFilter>("todos");
   const openModal = createModal || userOpen !== null;
 
@@ -51,7 +51,8 @@ export function useUsers() {
 
   function buildUser(data: UserFormData, current?: User): User {
     const cpf = data.cpf.replace(/\D/g, "");
-    const plate = data.driver ? data.plateVehicle.trim().toUpperCase() : undefined;
+    const thirdParty = data.driver && data.thirdParty;
+    const plate = thirdParty ? data.plateVehicle.trim().toUpperCase() : "";
 
     return {
       _id: current?._id ?? "",
@@ -59,7 +60,8 @@ export function useUsers() {
       cpf,
       password: data.password || undefined,
       driver: data.driver,
-      plateVehicle: plate || "",
+      thirdParty,
+      plateVehicle: plate,
       keyPix: data.keyPix.trim(),
       active: data.active,
     };
@@ -70,7 +72,8 @@ export function useUsers() {
     const digits = termo.replace(/\D/g, "");
 
     return users.filter((user) => {
-      if (onlyDrivers && !user.driver) return false;
+      if (kindFilter === "empresa" && (!user.driver || user.thirdParty)) return false;
+      if (kindFilter === "terceiros" && !user.thirdParty) return false;
       if (statusFilter === "ativos" && user.active === false) return false;
       if (statusFilter === "inativos" && user.active !== false) return false;
       if (!termo) return true;
@@ -82,7 +85,7 @@ export function useUsers() {
 
       return name.includes(termo) || plate.includes(termo) || matchCpf;
     });
-  }, [users, search, onlyDrivers, statusFilter]);
+  }, [users, search, kindFilter, statusFilter]);
 
   function formatCpf(cpf?: string) {
     if (!cpf) return "—";
@@ -126,8 +129,8 @@ export function useUsers() {
     users: filteredUsers,
     search,
     setSearch,
-    onlyDrivers,
-    setOnlyDrivers,
+    kindFilter,
+    setKindFilter,
     statusFilter,
     setStatusFilter,
     setUserOpen,

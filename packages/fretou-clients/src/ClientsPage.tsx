@@ -87,26 +87,28 @@ export function ClientsPage() {
                 onChange={(event) => setSearch(event.target.value)}
               />
             </label>
-            <fieldset className="flex flex-wrap items-center gap-4">
-              <legend className="sr-only">Status</legend>
-              {(
-                [
-                  ["todos", "Todos"],
-                  ["ativos", "Ativos"],
-                  ["inativos", "Desativados"],
-                ] as const
-              ).map(([value, label]) => (
-                <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
-                  <input
-                    type="radio"
-                    name="status-cliente"
-                    className="size-4 accent-brand"
-                    checked={statusFilter === value}
-                    onChange={() => setStatusFilter(value)}
-                  />
-                  {label}
-                </label>
-              ))}
+            <fieldset className="flex flex-col gap-2 rounded-xl border border-line bg-canvas/60 px-4 py-3 sm:max-w-md">
+              <legend className="px-1 text-sm text-navy">Status</legend>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                {(
+                  [
+                    ["todos", "Todos"],
+                    ["ativos", "Ativos"],
+                    ["inativos", "Desativados"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
+                    <input
+                      type="radio"
+                      name="status-cliente"
+                      className="size-4 accent-brand"
+                      checked={statusFilter === value}
+                      onChange={() => setStatusFilter(value)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
             </fieldset>
           </div>
           {loading ? <p className="text-sm text-muted">Carregando clientes...</p> : null}

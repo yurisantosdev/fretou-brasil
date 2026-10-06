@@ -4,15 +4,36 @@ import { hashPassword } from "@fretou/components/password";
 import { UsersResponse, UsersType } from "../types/Users";
 import { User } from "../models/Users";
 
+function normalizarVinculo(body: {
+  driver?: unknown;
+  thirdParty?: unknown;
+  plateVehicle?: unknown;
+}): { driver: boolean; thirdParty: boolean; plateVehicle: string } | { erro: string } {
+  const driver = body.driver === true;
+  const thirdParty = driver && body.thirdParty === true;
+  const plateVehicle =
+    thirdParty && typeof body.plateVehicle === "string"
+      ? body.plateVehicle.trim().toUpperCase()
+      : "";
+
+  if (thirdParty && !plateVehicle) {
+    return { erro: "Informe a placa do veículo." };
+  }
+
+  return { driver, thirdParty, plateVehicle };
+}
+
 export function serializar(user: UsersType): UsersResponse {
   return {
     _id: user._id,
     name: user.name,
+    password: user.password,
     cpf: user.cpf,
     driver: user.driver,
     plateVehicle: user.plateVehicle,
     keyPix: user.keyPix,
     active: user.active,
+    thirdParty: user.thirdParty,
   };
 }
 
@@ -33,8 +54,15 @@ export async function create(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  const vinculo = normalizarVinculo(dataUser);
+  if ("erro" in vinculo) {
+    res.status(400).json({ erro: vinculo.erro });
+    return;
+  }
+
   const user = await User.create({
     ...dataUser,
+    ...vinculo,
     password: await hashPassword(dataUser.password),
   });
 
@@ -62,8 +90,15 @@ export async function update(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  const vinculo = normalizarVinculo(resto);
+  if ("erro" in vinculo) {
+    res.status(400).json({ erro: vinculo.erro });
+    return;
+  }
+
   const updateUser = {
     ...resto,
+    ...vinculo,
     ...(typeof password === "string" && password.length > 0
       ? { password: await hashPassword(password) }
       : {}),

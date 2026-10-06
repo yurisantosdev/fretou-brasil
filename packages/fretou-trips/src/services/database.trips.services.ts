@@ -46,6 +46,7 @@ export async function listDrivers(signal: AbortSignal): Promise<TripDriver[]> {
     .map((user) => ({
       id: String(user._id),
       name: user.name,
+      thirdParty: user.thirdParty === true,
       plateVehicle: user.plateVehicle,
     }));
 }
@@ -55,6 +56,7 @@ export async function createUser(input: {
   cpf: string;
   password: string;
   driver: boolean;
+  thirdParty: boolean;
   plateVehicle: string;
   keyPix: string;
   active?: boolean;
@@ -71,7 +73,9 @@ export async function createUser(input: {
       cpf: input.cpf.replace(/\D/g, ""),
       password: input.password,
       driver: input.driver,
-      plateVehicle: input.driver ? input.plateVehicle.trim().toUpperCase() : "",
+      thirdParty: input.driver && input.thirdParty,
+      plateVehicle:
+        input.driver && input.thirdParty ? input.plateVehicle.trim().toUpperCase() : "",
       keyPix: input.keyPix.trim(),
       active: input.active !== false,
     }),

@@ -117,6 +117,7 @@ export function TripForm({
                 {drivers.map((driver) => (
                   <option key={driver.id} value={driver.id}>
                     {driver.name}
+                    {driver.thirdParty ? " · Terceiro" : ""}
                     {driver.plateVehicle ? ` · ${driver.plateVehicle}` : ""}
                   </option>
                 ))}

@@ -78,7 +78,9 @@ export async function me(req: Request, res: Response): Promise<void> {
     name: user.name,
     cpf: user.cpf,
     driver: user.driver,
+    thirdParty: user.thirdParty === true,
     plateVehicle: user.plateVehicle,
     keyPix: user.keyPix,
+    active: user.active !== false,
   });
 }
