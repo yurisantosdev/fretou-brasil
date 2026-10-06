@@ -12,6 +12,7 @@ import authRoutes from "./routes/authRoutes";
 import { tripsRouter } from "@fretou/trips/server/router";
 import { usersRouter } from "@fretou/users/server/router";
 import { clientsRouter } from "@fretou/clients/server/router";
+import { vehiclesRouter } from "@fretou/vehicles/server/router";
 
 setDefaultResultOrder("ipv4first");
 
@@ -178,6 +179,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", requireAuth, usersRouter);
 app.use("/api/trips", requireAuth, tripsRouter);
 app.use("/api/clients", requireAuth, clientsRouter);
+app.use("/api/vehicles", requireAuth, vehiclesRouter);
 
 export default app;
 

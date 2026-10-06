@@ -32,6 +32,7 @@
     "@fretou/components": "^0.1.0",
     "@fretou/trips": "^0.1.0",
     "@fretou/users": "^0.1.0",
+    "@fretou/vehicles": "^0.1.0",
     "@phosphor-icons/react": "^2.1.10",
     "react-toastify": "^11.1.0"
   }

@@ -1,0 +1,43 @@
+{
+  "name": "@fretou/vehicles",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./server/index.ts",
+    "./server/router": "./server/router.ts",
+    "./server/models/Vehicles": "./server/models/Vehicles.ts"
+  },
+  "scripts": {
+    "dev": "next dev --port 3005",
+    "build": "tsc -p tsconfig.server.json",
+    "build:web": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "check-types": "tsc -p tsconfig.server.json --noEmit"
+  },
+  "peerDependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^8.23.1"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "next": "16.3.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.3",
+    "express": "^5.2.1",
+    "mongoose": "^8.23.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

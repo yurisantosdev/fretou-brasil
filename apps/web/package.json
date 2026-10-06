@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@fretou/clients": "*",
+    "@fretou/vehicles": "*",
     "@fretou/components": "*",
     "@fretou/trips": "*",
     "@fretou/users": "*",

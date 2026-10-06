@@ -1,0 +1,1 @@
+export { vehiclesRouter } from "./router";

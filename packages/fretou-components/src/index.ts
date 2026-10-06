@@ -17,6 +17,7 @@ export {
   formatMoneyInput,
   parseMoney,
   formatWeight,
+  formatLoad
 } from "./services/formaters";
 export { DatePicker } from "./components/datePicker";
 export { Tooltip } from "./components/tooltip";

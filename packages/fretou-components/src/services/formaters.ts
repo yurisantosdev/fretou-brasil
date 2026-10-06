@@ -9,6 +9,10 @@ export function formatCpf(valor: string) {
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
+export function formatLoad(totalLoad: number) {
+  return `${new Intl.NumberFormat("pt-BR").format(totalLoad)} kg`;
+}
+
 export function formatCnpjInput(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 14);
   return digits

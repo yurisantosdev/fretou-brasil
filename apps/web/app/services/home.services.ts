@@ -4,7 +4,12 @@ import { createElement, useEffect, useState } from "react";
 import { Profile, clearSession, fetchProfile, readToken } from "../lib/api";
 import { useRouter } from "next/navigation";
 import { CardModuleType } from "../types/cardModule";
-import { UsersIcon, TruckIcon, UsersThreeIcon } from "@phosphor-icons/react";
+import {
+  UsersIcon,
+  TruckIcon,
+  UsersThreeIcon,
+  TrafficSignIcon
+} from "@phosphor-icons/react";
 
 export function useHome() {
   const router = useRouter();
@@ -20,9 +25,16 @@ export function useHome() {
     {
       title: "Viagens",
       description: "Gerencie as viagens do sistema",
-      icon: createElement(TruckIcon, { size: 25 }),
+      icon: createElement(TrafficSignIcon, { size: 25 }),
       color: "bg-brand",
       href: "/modules/trips"
+    },
+    {
+      title: "Veículos",
+      description: "Gerencie os veículos do sistema",
+      icon: createElement(TruckIcon, { size: 25 }),
+      color: "bg-brand",
+      href: "/modules/vehicles"
     },
     {
       title: "Usuários",
