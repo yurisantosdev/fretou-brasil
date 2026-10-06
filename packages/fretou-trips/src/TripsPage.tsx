@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CaretLeftIcon, EyeIcon, PencilSimpleIcon } from "@phosphor-icons/react";
+import { TripPdfButton } from "./components/tripPdfButton";
 import { Modal, Table, DatePicker, formatMoney, formatWeight, formatDate, Tooltip } from "@fretou/components";
 import { TripDetail } from "./components/tripDetail";
 import { TripForm } from "./components/tripForm/index.ts";
@@ -147,20 +148,22 @@ export function TripsPage() {
                 : undefined
           }
           headerAction={
-            tripOpen && !createModal && tripOpen.status !== "FINALIZADA" && tripOpen.status !== "CANCELADA" ? (
-              <Tooltip
-                label="Editar viagem"
-                side="bottom"
-              >
-                <button
-                  type="button"
-                  aria-label="Editar viagem"
-                  className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-navy transition hover:bg-canvas"
-                  onClick={() => setEditModal(true)}
-                >
-                  <PencilSimpleIcon size={18} />
-                </button>
-              </Tooltip>
+            tripOpen && !createModal ? (
+              <>
+                <TripPdfButton trip={tripOpen} />
+                {tripOpen.status !== "FINALIZADA" && tripOpen.status !== "CANCELADA" ? (
+                  <Tooltip label="Editar viagem" side="bottom">
+                    <button
+                      type="button"
+                      aria-label="Editar viagem"
+                      className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-navy transition hover:bg-canvas"
+                      onClick={() => setEditModal(true)}
+                    >
+                      <PencilSimpleIcon size={18} />
+                    </button>
+                  </Tooltip>
+                ) : null}
+              </>
             ) : undefined
           }
         >
