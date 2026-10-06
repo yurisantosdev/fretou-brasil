@@ -19,6 +19,12 @@ export function UsersPage() {
     formatCpf,
     loading,
     error,
+    search,
+    setSearch,
+    onlyDrivers,
+    setOnlyDrivers,
+    statusFilter,
+    setStatusFilter,
   } = data;
 
   return (
@@ -68,6 +74,50 @@ export function UsersPage() {
         </Modal>
 
         <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4">
+            <label className="flex flex-col gap-2 text-sm text-navy">
+              Busca
+              <input
+                type="text"
+                value={search}
+                placeholder="Nome, CPF ou placa"
+                className="h-10 rounded-xl border border-line bg-white px-3 text-sm font-semibold text-navy outline-none transition placeholder:font-normal placeholder:text-placeholder focus:border-brand"
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <label className="flex h-10 items-center gap-3 text-sm font-semibold text-navy">
+                <input
+                  type="checkbox"
+                  className="size-4 accent-brand"
+                  checked={onlyDrivers}
+                  onChange={(event) => setOnlyDrivers(event.target.checked)}
+                />
+                Somente motoristas
+              </label>
+              <fieldset className="flex flex-wrap items-center gap-4">
+                <legend className="sr-only">Status</legend>
+                {(
+                  [
+                    ["todos", "Todos"],
+                    ["ativos", "Ativos"],
+                    ["inativos", "Desativados"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
+                    <input
+                      type="radio"
+                      name="status-usuario"
+                      className="size-4 accent-brand"
+                      checked={statusFilter === value}
+                      onChange={() => setStatusFilter(value)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
+            </div>
+          </div>
           {loading ? <p className="text-sm text-muted">Carregando usuários...</p> : null}
           {error ? <p className="text-sm font-semibold text-brand">{error}</p> : null}
           <Table
@@ -87,7 +137,22 @@ export function UsersPage() {
                   </span>
                 ),
               },
-              { header: "Placa", cell: (user) => user.plateVehicle ?? "—" },
+              { header: "Placa", cell: (user) => user.plateVehicle || "—" },
+              {
+                header: "Status",
+                cell: (user) => {
+                  const ativo = user.active !== false;
+                  return (
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
+                        ativo ? "bg-emerald-100 text-emerald-800" : "bg-canvas text-muted"
+                      }`}
+                    >
+                      {ativo ? "Ativo" : "Desativado"}
+                    </span>
+                  );
+                },
+              },
               {
                 header: "Ação",
                 cell: (user) => (

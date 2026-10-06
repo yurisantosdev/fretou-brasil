@@ -12,6 +12,7 @@ export function serializar(user: UsersType): UsersResponse {
     driver: user.driver,
     plateVehicle: user.plateVehicle,
     keyPix: user.keyPix,
+    active: user.active,
   };
 }
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createUsers, listUsers, updateUsers } from "./database.users.services";
-import { User, UserFormData } from "../types/users";
+import { User, UserFormData, UserStatusFilter } from "../types/users";
 import { AlertError, AlertSuccess } from "@fretou/components";
 
 export function useUsers() {
@@ -11,6 +11,9 @@ export function useUsers() {
   const [createModal, setCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [onlyDrivers, setOnlyDrivers] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<UserStatusFilter>("todos");
   const openModal = createModal || userOpen !== null;
 
   function normalize(user: User): User {
@@ -58,8 +61,28 @@ export function useUsers() {
       driver: data.driver,
       plateVehicle: plate || "",
       keyPix: data.keyPix.trim(),
+      active: data.active,
     };
   }
+
+  const filteredUsers = useMemo(() => {
+    const termo = search.trim().toLocaleLowerCase("pt-BR");
+    const digits = termo.replace(/\D/g, "");
+
+    return users.filter((user) => {
+      if (onlyDrivers && !user.driver) return false;
+      if (statusFilter === "ativos" && user.active === false) return false;
+      if (statusFilter === "inativos" && user.active !== false) return false;
+      if (!termo) return true;
+
+      const name = user.name.toLocaleLowerCase("pt-BR");
+      const cpf = (user.cpf ?? "").replace(/\D/g, "");
+      const plate = (user.plateVehicle ?? "").toLocaleLowerCase("pt-BR");
+      const matchCpf = digits.length > 0 && cpf.includes(digits);
+
+      return name.includes(termo) || plate.includes(termo) || matchCpf;
+    });
+  }, [users, search, onlyDrivers, statusFilter]);
 
   function formatCpf(cpf?: string) {
     if (!cpf) return "—";
@@ -100,7 +123,13 @@ export function useUsers() {
   }
 
   return {
-    users,
+    users: filteredUsers,
+    search,
+    setSearch,
+    onlyDrivers,
+    setOnlyDrivers,
+    statusFilter,
+    setStatusFilter,
     setUserOpen,
     setCreateModal,
     openModal,

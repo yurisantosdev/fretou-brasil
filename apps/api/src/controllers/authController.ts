@@ -40,6 +40,11 @@ export async function login(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  if (user.active === false) {
+    res.status(403).json({ erro: "Usuário desativado" });
+    return;
+  }
+
   const token = signAccessToken({
     sub: user._id.toString(),
     name: user.name,
@@ -63,7 +68,7 @@ export async function me(req: Request, res: Response): Promise<void> {
   }
 
   const user = await User.findById(req.user.sub);
-  if (!user) {
+  if (!user || user.active === false) {
     res.status(401).json({ erro: "Sessão inválida" });
     return;
   }

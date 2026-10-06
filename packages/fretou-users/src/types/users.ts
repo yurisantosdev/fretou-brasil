@@ -6,6 +6,7 @@ export type User = {
   driver: boolean;
   plateVehicle?: string;
   keyPix?: string;
+  active?: boolean;
 };
 
 export type UserFormData = {
@@ -15,4 +16,7 @@ export type UserFormData = {
   driver: boolean;
   plateVehicle: string;
   keyPix: string;
+  active: boolean;
 };
+
+export type UserStatusFilter = "todos" | "ativos" | "inativos";

@@ -132,6 +132,7 @@ export function useTripForm({
     driver: boolean;
     plateVehicle: string;
     keyPix: string;
+    active: boolean;
   }) {
     const created = await createUser(data);
     if (created.driver) {

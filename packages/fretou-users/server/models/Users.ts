@@ -13,6 +13,11 @@ const usersSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
+    active: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
     cpf: {
       type: String,
       required: false,

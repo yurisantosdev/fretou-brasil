@@ -42,7 +42,7 @@ export async function listDrivers(signal: AbortSignal): Promise<TripDriver[]> {
   }
 
   return (data as User[])
-    .filter((user) => user.driver)
+    .filter((user) => user.driver && user.active !== false)
     .map((user) => ({
       id: String(user._id),
       name: user.name,
@@ -57,6 +57,7 @@ export async function createUser(input: {
   driver: boolean;
   plateVehicle: string;
   keyPix: string;
+  active?: boolean;
 }): Promise<User> {
   const response = await fetch(USERS_URL, {
     method: "POST",
@@ -72,6 +73,7 @@ export async function createUser(input: {
       driver: input.driver,
       plateVehicle: input.driver ? input.plateVehicle.trim().toUpperCase() : "",
       keyPix: input.keyPix.trim(),
+      active: input.active !== false,
     }),
   });
 

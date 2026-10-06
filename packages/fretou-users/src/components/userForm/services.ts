@@ -20,6 +20,7 @@ export function useUserForm({
   const [driver, setDriver] = useState(user?.driver ?? defaultDriver);
   const [plateVehicle, setPlateVehicle] = useState(user?.plateVehicle ?? "");
   const [keyPix, setKeyPix] = useState(user?.keyPix ?? "");
+  const [active, setActive] = useState(user?.active !== false);
   const [erro, setErro] = useState("");
 
   async function salvar(event: FormEvent<HTMLFormElement>) {
@@ -47,7 +48,7 @@ export function useUserForm({
 
     setErro("");
     try {
-      await onSubmit({ name, cpf, password, driver, plateVehicle, keyPix });
+      await onSubmit({ name, cpf, password, driver, plateVehicle, keyPix, active });
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Não foi possível salvar o usuário.");
     }
@@ -68,6 +69,8 @@ export function useUserForm({
     setPlateVehicle,
     keyPix,
     setKeyPix,
+    active,
+    setActive,
     erro,
   };
 }

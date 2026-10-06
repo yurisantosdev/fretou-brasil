@@ -32,6 +32,8 @@ export function UserForm({
     setPlateVehicle,
     keyPix,
     setKeyPix,
+    active,
+    setActive,
     erro
   } = data;
 
@@ -105,6 +107,16 @@ export function UserForm({
             />
           </label>
         ) : null}
+
+        <label className="flex h-11 items-center gap-3 text-sm font-semibold text-navy sm:col-span-2">
+          <input
+            type="checkbox"
+            className="size-4 accent-brand"
+            checked={active}
+            onChange={(event) => setActive(event.target.checked)}
+          />
+          Usuário ativo
+        </label>
       </div>
 
       {erro ? <p className="text-sm font-semibold text-brand">{erro}</p> : null}

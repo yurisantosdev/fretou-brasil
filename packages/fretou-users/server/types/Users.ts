@@ -8,6 +8,7 @@ export type UsersType = {
   driver: boolean;
   plateVehicle?: string;
   keyPix?: string;
+  active?: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -19,4 +20,5 @@ export type UsersResponse = {
   driver: boolean;
   plateVehicle?: string;
   keyPix?: string;
+  active?: boolean;
 };
