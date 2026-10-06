@@ -196,10 +196,13 @@ export function titulosDaProva(entrada: {
 
 const LIMITE_FOTO = 1_500_000;
 
-export function imagemJpeg(valor: unknown): string {
+export function imagem(valor: unknown): string {
   const texto = textoObrigatorio(valor, "content");
-  if (!texto.startsWith("data:image/jpeg;base64,")) {
-    throw new ErroHttp(400, "A foto precisa ser uma imagem JPEG");
+  const separador = texto.indexOf(",");
+  const cabecalho = separador >= 0 ? texto.slice(0, separador) : "";
+  const corpo = separador >= 0 ? texto.slice(separador + 1).replace(/\s/g, "") : "";
+  if (!/^data:image\/[a-z0-9.+-]+;base64$/i.test(cabecalho) || !/^[a-z0-9+/]+=*$/i.test(corpo)) {
+    throw new ErroHttp(400, "A foto precisa ser uma imagem");
   }
   if (texto.length > LIMITE_FOTO) {
     throw new ErroHttp(422, "A foto ficou grande demais. Envie uma imagem menor.");

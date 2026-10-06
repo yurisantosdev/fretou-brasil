@@ -2,6 +2,7 @@ import { PapelTitulo, type TripDetail as TripDetailData } from "../../types/trip
 
 export type TripDetailProps = {
   trip: TripDetailData;
+  driver?: boolean;
   onIssueCte: (numero: string, emitidoEm: string) => Promise<void>;
   onAttachPhoto: (nome: string, enviadaEm: string, conteudo: string) => Promise<void>;
   onRegisterUnload: (dataHora: string) => Promise<void>;

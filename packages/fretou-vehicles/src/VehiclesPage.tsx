@@ -18,8 +18,6 @@ export function VehiclesPage({ driverId }: { driverId?: string }) {
     createModal,
     vehicleOpen,
     saveVehicle,
-    toggleActive,
-    togglingId,
     loading,
     error,
     search,
@@ -48,18 +46,16 @@ export function VehiclesPage({ driverId }: { driverId?: string }) {
               </p>
             </div>
 
-            {ownFleet ? null : (
-              <button
-                type="button"
-                className="h-10 shrink-0 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
-                onClick={() => {
-                  setVehicleOpen(null);
-                  setCreateModal(true);
-                }}
-              >
-                Novo veículo
-              </button>
-            )}
+            <button
+              type="button"
+              className="h-10 shrink-0 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
+              onClick={() => {
+                setVehicleOpen(null);
+                setCreateModal(true);
+              }}
+            >
+              Novo veículo
+            </button>
           </div>
         </section>
 
@@ -102,7 +98,7 @@ export function VehiclesPage({ driverId }: { driverId?: string }) {
                     ["inativos", "Desativados"],
                   ] as const
                 ).map(([value, label]) => (
-                  <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
+                  <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy cursor-pointer">
                     <input
                       type="radio"
                       name="status-veiculo"

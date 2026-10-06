@@ -100,7 +100,7 @@ export function useLogin() {
       saveToken(token);
       router.replace("/home");
     } catch {
-      setErro("Sem conexão com o servidor. Verifique se a API está no ar.");
+      setErro("Sem conexão, verifique sua conexão com a internet.");
     } finally {
       setSending(false);
     }

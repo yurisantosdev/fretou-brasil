@@ -14,8 +14,8 @@ import { StatusTrip } from "./types/trips";
 import { MoneyCard } from "./components/moneyCard";
 import { StatusBadge } from "./components/statusBadge";
 
-export function TripsPage() {
-  const data = useTrips();
+export function TripsPage({ lockedDriverId }: { lockedDriverId?: string }) {
+  const data = useTrips(lockedDriverId);
   if (!data) return null;
   const {
     clients,
@@ -58,7 +58,8 @@ export function TripsPage() {
     search,
     setSearch,
     visible,
-    draftTrip
+    draftTrip,
+    lockedDriver,
   } = data;
 
   return (
@@ -77,23 +78,25 @@ export function TripsPage() {
               Módulo - Viagens
             </p>
 
-            <button
-              type="button"
-              className="h-10 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
-              onClick={() => {
-                closeModal();
-                setCreateModal(true);
-              }}
-            >
-              Nova viagem
-            </button>
+            {lockedDriver ? null : (
+              <button
+                type="button"
+                className="h-10 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
+                onClick={() => {
+                  closeModal();
+                  setCreateModal(true);
+                }}
+              >
+                Nova viagem
+              </button>
+            )}
           </div>
           <p className="mt-3 max-w-3xl text-sm text-muted">
             Os títulos saem quando o CT-e e a foto do caminhão carregado existem. O saldo só pode ser programado depois da descarga e dos comprovantes. A viagem finaliza quando adiantamento e saldo são baixados.
           </p>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {lockedDriver ? null : <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MoneyCard
             label="A pagar hoje"
             value={formatMoney(summary.payToday)}
@@ -118,9 +121,9 @@ export function TripsPage() {
             value={formatMoney(summary.margin)}
             hint="Soma do frete do cliente menos o frete do motorista, vinda do acordo de cada viagem."
           />
-        </section>
+        </section>}
 
-        <section className="flex flex-col gap-4">
+        {lockedDriver ? null : <section className="flex flex-col gap-4">
           <p className="text-sm font-bold tracking-[0.14em] text-brand uppercase">Saldos travados</p>
           <Table
             rows={summary.locked}
@@ -132,7 +135,7 @@ export function TripsPage() {
               { header: "Por quê", cell: (item) => item.reason },
             ]}
           />
-        </section>
+        </section>}
 
         <Modal
           open={openModal}
@@ -151,7 +154,7 @@ export function TripsPage() {
             tripOpen && !createModal ? (
               <>
                 <TripPdfButton trip={tripOpen} />
-                {tripOpen.status !== "FINALIZADA" && tripOpen.status !== "CANCELADA" ? (
+                {!lockedDriver && tripOpen.status !== "FINALIZADA" && tripOpen.status !== "CANCELADA" ? (
                   <Tooltip label="Editar viagem" side="bottom">
                     <button
                       type="button"
@@ -183,6 +186,7 @@ export function TripsPage() {
             <TripDetail
               key={tripOpen.updatedAt}
               trip={tripOpen}
+              driver={lockedDriver}
               onIssueCte={(numero, emitidoEm) => issueCte(tripOpen.id, numero, emitidoEm)}
               onAttachPhoto={(nome, enviadaEm, conteudo) => sendPhoto(tripOpen.id, nome, enviadaEm, conteudo)}
               onRegisterUnload={(dataHora) => unload(tripOpen.id, dataHora)}
@@ -271,22 +275,24 @@ export function TripsPage() {
                   ))}
                 </select>
               </label>
-              <label className="flex flex-col gap-2 text-sm text-navy">
-                Motorista
-                <select
-                  value={driverFilter}
-                  className="h-10 rounded-xl border border-line bg-white px-3 text-sm font-semibold text-navy"
-                  onChange={(event) => setDriverFilter(event.target.value)}
-                >
-                  <option value="">Todos</option>
-                  {drivers.map((driver) => (
-                    <option key={driver.id} value={driver.id}>
-                      {driver.name}
-                      {driver.thirdParty ? " · Terceiro" : " · Interno"}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {lockedDriver ? null : (
+                <label className="flex flex-col gap-2 text-sm text-navy">
+                  Motorista
+                  <select
+                    value={driverFilter}
+                    className="h-10 rounded-xl border border-line bg-white px-3 text-sm font-semibold text-navy"
+                    onChange={(event) => setDriverFilter(event.target.value)}
+                  >
+                    <option value="">Todos</option>
+                    {drivers.map((driver) => (
+                      <option key={driver.id} value={driver.id}>
+                        {driver.name}
+                        {driver.thirdParty ? " · Terceiro" : " · Interno"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="flex flex-col gap-2 text-sm text-navy">
                 De
                 <DatePicker size="sm" value={dateFrom} placeholder="Data inicial" onChange={setDateFrom} />

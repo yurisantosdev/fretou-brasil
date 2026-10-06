@@ -31,7 +31,6 @@ fretou-brasil/
 └── ...
 ```
 
-
 ## 🛠️ Tecnologias
 
 -  **Node.js** 24+
@@ -40,6 +39,7 @@ fretou-brasil/
 -  **Mongoose**
 -  **JWT**
 -  **Monorepo**
+-  **ReactNative**
   
 
 ## 📦 Requisitos
@@ -71,6 +71,15 @@ npm  install
 Crie o arquivo de ambiente da API:
 ```bash
 cp  apps/api/.env.example  apps/api/.env
+```
+
+# ⚠️ Importante
+
+Para facilitar o acesso da plataforma, (somente para realiar testes). Ao executar a aplicação temos um usuário já criado (Usuário Teste)
+
+```bash
+CPF: 111.111.111-11
+SENHA: Fretou2026
 ```
 
 ## ⚙️ Configuração da API
@@ -115,6 +124,27 @@ O projeto **não utiliza migrations ou seeds**. As coleções são criadas autom
   
 
 ## ▶️ Executando o projeto
+
+### Com Docker Compose
+
+Sobe MongoDB, API e Web em modo de desenvolvimento.
+
+A imagem guarda só as dependências. O código entra por volume, então mudar um arquivo não reconstrói a imagem. O cache do Next também fica em volume: a segunda subida não recompila o app inteiro.
+
+Primeira vez:
+
+```bash
+docker compose up --build
+```
+
+Nas próximas:
+
+```bash
+docker compose up
+```
+
+Use `--build` de novo só quando mudar o `package-lock.json`. As variáveis (`PORT`, `MONGODB_URI`, `JWT_SECRET`, `NEXT_PUBLIC_API_URL`) já vêm no Compose. A web abre em `http://localhost:3000` e chama a API em `http://localhost:3001`. O banco, a partir do host, fica em `mongodb://localhost:27017/fretouBrasil`.
+
 Com as dependências instaladas, o ambiente configurado e o MongoDB em execução, execute:
 
 ```bash
@@ -259,6 +289,16 @@ Depois, acesse:
 ```text
 http://localhost:3000
 ```
+
+## 📱 Aplicativo
+
+Foi desenvolvimento um aplicativo com ReactNative, está neste repositório 
+
+- https://github.com/yurisantosdev/fretou-app
+
+Dentro do aplicativo, temos como realizar o cadastro de veículos, editar e visualizar (veículos dos motoristas tereceiros)
+Temos também como visualizar as viagens vinculadas ao motorista, podemos realizar a emissão do CT-e, foto do caminhão carregado, registrar descarga e Comprovantes Originais.
+
 
 ## 🔮 Itens que poderemos realizar no futuro (que faria a mais)
   

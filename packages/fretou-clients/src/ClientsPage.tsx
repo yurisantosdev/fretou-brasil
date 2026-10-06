@@ -97,7 +97,7 @@ export function ClientsPage() {
                     ["inativos", "Desativados"],
                   ] as const
                 ).map(([value, label]) => (
-                  <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
+                  <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy cursor-pointer">
                     <input
                       type="radio"
                       name="status-cliente"
@@ -126,9 +126,8 @@ export function ClientsPage() {
                   const ativo = client.active !== false;
                   return (
                     <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
-                        ativo ? "bg-emerald-100 text-emerald-800" : "bg-canvas text-muted"
-                      }`}
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${ativo ? "bg-emerald-100 text-emerald-800" : "bg-canvas text-muted"
+                        }`}
                     >
                       {ativo ? "Ativo" : "Desativado"}
                     </span>

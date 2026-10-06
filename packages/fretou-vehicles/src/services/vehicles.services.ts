@@ -13,7 +13,6 @@ export function useVehicles(driverId?: string) {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<VehicleStatusFilter>("todos");
-  const [togglingId, setTogglingId] = useState<string | null>(null);
   const openModal = createModal || vehicleOpen !== null;
 
   function normalize(vehicle: Vehicle): Vehicle {
@@ -24,16 +23,6 @@ export function useVehicles(driverId?: string) {
       year: Number.isFinite(Number(vehicle.year)) ? Number(vehicle.year) : 0,
       totalLoad: Number.isFinite(Number(vehicle.totalLoad)) ? Number(vehicle.totalLoad) : 0,
       active: vehicle.active !== false,
-    };
-  }
-
-  function toForm(vehicle: Vehicle): VehicleFormData {
-    return {
-      plate: vehicle.plate,
-      model: vehicle.model,
-      year: vehicle.year,
-      totalLoad: vehicle.totalLoad,
-      active: vehicle.active,
     };
   }
 
@@ -114,33 +103,8 @@ export function useVehicles(driverId?: string) {
     }
   }
 
-  async function toggleActive(vehicle: Vehicle) {
-    const controller = new AbortController();
-    const nextActive = vehicle.active === false;
-    setTogglingId(vehicle._id);
-
-    try {
-      const updated = await updateVehicle(vehicle._id, controller.signal, {
-        ...toForm(vehicle),
-        active: nextActive,
-      });
-      setVehicles((current) =>
-        current.map((item) => (item._id === vehicle._id ? normalize(updated) : item))
-      );
-      AlertSuccess(nextActive ? "Veículo ativado." : "Veículo desativado.");
-    } catch (err) {
-      AlertError(err instanceof Error ? err.message : "Não foi possível atualizar o status do veículo.");
-    } finally {
-      setTogglingId(null);
-    }
-  }
-
   return {
     vehicles: filteredVehicles,
-    search,
-    setSearch,
-    statusFilter,
-    setStatusFilter,
     setVehicleOpen,
     setCreateModal,
     openModal,
@@ -148,10 +112,12 @@ export function useVehicles(driverId?: string) {
     createModal,
     vehicleOpen,
     saveVehicle,
-    toggleActive,
-    togglingId,
     loading,
     error,
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
     ownFleet: Boolean(driverId),
   };
 }

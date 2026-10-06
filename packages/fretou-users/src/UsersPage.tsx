@@ -44,7 +44,7 @@ export function UsersPage() {
                 Módulo - Usuários
               </p>
               <p className="mt-2 max-w-2xl text-sm text-muted">
-                Cadastre quem acessa o sistema, indique motoristas e a placa, e desative o login quando o acesso não for mais necessário.
+                Cadastre quem acessa o sistema, indique motoristas e terceiros, e desative o login quando o acesso não for mais necessário.
               </p>
             </div>
 
@@ -85,7 +85,7 @@ export function UsersPage() {
               <input
                 type="text"
                 value={search}
-                placeholder="Nome, CPF ou placa"
+                placeholder="Nome ou CPF"
                 className="h-10 rounded-xl border border-line bg-white px-3 text-sm font-semibold text-navy outline-none transition placeholder:font-normal placeholder:text-placeholder focus:border-brand"
                 onChange={(event) => setSearch(event.target.value)}
               />
@@ -101,7 +101,7 @@ export function UsersPage() {
                       ["terceiros", "Terceiros"],
                     ] as const
                   ).map(([value, label]) => (
-                    <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
+                    <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy cursor-pointer">
                       <input
                         type="radio"
                         name="tipo-usuario"
@@ -124,7 +124,7 @@ export function UsersPage() {
                       ["inativos", "Desativados"],
                     ] as const
                   ).map(([value, label]) => (
-                    <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy">
+                    <label key={value} className="flex items-center gap-2 text-sm font-semibold text-navy cursor-pointer">
                       <input
                         type="radio"
                         name="status-usuario"
@@ -170,21 +170,13 @@ export function UsersPage() {
                 ),
               },
               {
-                header: "Placa",
-                cell: (user) => {
-                  const placas = (user.vehicles ?? []).map((vehicle) => vehicle.plate).filter(Boolean);
-                  return placas.length ? placas.join(", ") : "—";
-                },
-              },
-              {
                 header: "Status",
                 cell: (user) => {
                   const ativo = user.active !== false;
                   return (
                     <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
-                        ativo ? "bg-emerald-100 text-emerald-800" : "bg-canvas text-muted"
-                      }`}
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${ativo ? "bg-emerald-100 text-emerald-800" : "bg-canvas text-muted"
+                        }`}
                     >
                       {ativo ? "Ativo" : "Desativado"}
                     </span>

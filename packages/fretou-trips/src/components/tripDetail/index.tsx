@@ -14,6 +14,7 @@ import { PhotoLoad } from "./_components/photoLoad";
 
 export function TripDetail({
   trip,
+  driver = false,
   onIssueCte,
   onAttachPhoto,
   onRegisterUnload,
@@ -107,158 +108,167 @@ export function TripDetail({
         <Field label="Comprovantes originais" value={formatDateTime(comprovantes?.received)} />
       </section>
 
-      {trip.status === "CANCELADA" ? null : <><section className="grid gap-4 rounded-2xl border border-line p-4 sm:grid-cols-3">
-        <Field label="Frete a receber" value={formatMoney(saldoAReceber(trip))} />
-        <Field label="Frete a pagar" value={formatMoney(saldoAPagar(trip))} />
-        <Field label="Divisão do frete ao motorista" value={trip.divideShipping || "—"} />
-        <Field label="Margem da viagem" value={margem} />
-        <Field
-          label="Título a receber"
-          value={
-            receber
-              ? `${formatMoney(receber.value)} · vence ${formatDate(receber.expirationDate)}`
-              : "Ainda não gerado"
-          }
-        />
-        <Field
-          label="Adiantamento"
-          value={
-            adiantamento
-              ? `${formatMoney(adiantamento.value)}${adiantamento.liqiudateDate ? " · baixado" : ""}`
-              : "Ainda não gerado"
-          }
-        />
-        <Field
-          label="Saldo"
-          value={
-            saldo
-              ? `${formatMoney(saldo.value)}${saldo.bloqueio ? " · bloqueado" : saldo.liqiudateDate ? " · baixado" : " · liberado"}`
-              : "Ainda não gerado"
-          }
-        />
-        <Field
-          label="Prazos"
-          value={`Cliente ${trip.acordoFrete.prazoClienteDias} dia(s) após o CT-e · Motorista ${trip.acordoFrete.prazoMotoristaDias} dia(s) após a foto`}
-        />
+      {trip.status === "CANCELADA" ? null : <>
+        {driver ? null :
+          <section className="grid gap-4 rounded-2xl border border-line p-4 sm:grid-cols-3">
+            <Field label="Frete a receber" value={formatMoney(saldoAReceber(trip))} />
+            <Field label="Frete a pagar" value={formatMoney(saldoAPagar(trip))} />
+            <Field label="Divisão do frete ao motorista" value={trip.divideShipping || "—"} />
+            <Field label="Margem da viagem" value={margem} />
+            <Field
+              label="Título a receber"
+              value={
+                receber
+                  ? `${formatMoney(receber.value)} · vence ${formatDate(receber.expirationDate)}`
+                  : "Ainda não gerado"
+              }
+            />
+            <Field
+              label="Adiantamento"
+              value={
+                adiantamento
+                  ? `${formatMoney(adiantamento.value)}${adiantamento.liqiudateDate ? " · baixado" : ""}`
+                  : "Ainda não gerado"
+              }
+            />
+            <Field
+              label="Saldo"
+              value={
+                saldo
+                  ? `${formatMoney(saldo.value)}${saldo.bloqueio ? " · bloqueado" : saldo.liqiudateDate ? " · baixado" : " · liberado"}`
+                  : "Ainda não gerado"
+              }
+            />
+            <Field
+              label="Prazos"
+              value={`Cliente ${trip.acordoFrete.prazoClienteDias} dia(s) após o CT-e · Motorista ${trip.acordoFrete.prazoMotoristaDias} dia(s) após a foto`}
+            />
 
-        <div className="flex flex-col gap-4 border-t border-line pt-4 sm:col-span-3">
-          <form className="flex flex-col gap-3" onSubmit={registrarAdiantamento}>
-            <p className="text-sm font-bold text-navy">
-              Adiantamento ao motorista · {formatMoney(parties.adiantamento)}
-            </p>
-            {!adiantamento && !trip.advancePaidAt ? (
-              <p className="text-sm text-muted">
-                O adiantamento ainda não foi gerado. Ele sai quando CT-e e foto existirem.
-              </p>
-            ) : trip.advancePaidAt || adiantamento?.liqiudateDate ? (
-              <p className="text-sm text-muted">
-                Pago em {formatDateTime(trip.advancePaidAt ?? adiantamento?.liqiudateDate)}.
-              </p>
-            ) : (
-              <>
-                <label className="flex max-w-sm flex-col gap-2 text-sm font-semibold text-navy">
-                  Data e hora
-                  <DatePicker showTime value={advanceAt} onChange={setAdvanceAt} />
-                </label>
-                <button
-                  type="submit"
-                  className="h-10 w-fit cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
-                >
-                  Registrar pagamento de {formatMoney(parties.adiantamento)}
-                </button>
-              </>
-            )}
-          </form>
-          <form className="flex flex-col gap-3" onSubmit={programarSaldo}>
-            <p className="text-sm font-bold text-navy">
-              Programação do saldo · {formatMoney(saldo?.value ?? parties.restante)}
-            </p>
-            {!saldo ? (
-              <p className="text-sm text-muted">O saldo ainda não foi gerado.</p>
-            ) : saldo.bloqueio ? (
-              <p className="text-sm font-semibold text-brand" role="alert">
-                {saldo.bloqueio}
-              </p>
-            ) : saldo.scheduledAt ? (
-              <p className="text-sm text-muted">Programado para {formatDateTime(saldo.scheduledAt)}.</p>
-            ) : (
-              <>
-                <label className="flex max-w-sm flex-col gap-2 text-sm font-semibold text-navy">
-                  Data e hora
-                  <DatePicker showTime value={scheduleAt} onChange={setScheduleAt} />
-                </label>
-                <button
-                  type="submit"
-                  className="h-10 w-fit cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
-                >
-                  Programar saldo
-                </button>
-              </>
-            )}
-          </form>
-        </div>
-      </section>
+            <div className="flex flex-col gap-4 border-t border-line pt-4 sm:col-span-3">
+              <form className="flex flex-col gap-3" onSubmit={registrarAdiantamento}>
+                <p className="text-sm font-bold text-navy">
+                  Adiantamento ao motorista · {formatMoney(parties.adiantamento)}
+                </p>
+                {!adiantamento && !trip.advancePaidAt ? (
+                  <p className="text-sm text-muted">
+                    O adiantamento ainda não foi gerado. Ele sai quando CT-e e foto existirem.
+                  </p>
+                ) : trip.advancePaidAt || adiantamento?.liqiudateDate ? (
+                  <p className="text-sm text-muted">
+                    Pago em {formatDateTime(trip.advancePaidAt ?? adiantamento?.liqiudateDate)}.
+                  </p>
+                ) : (
+                  <>
+                    <label className="flex max-w-sm flex-col gap-2 text-sm font-semibold text-navy">
+                      Data e hora
+                      <DatePicker showTime value={advanceAt} onChange={setAdvanceAt} />
+                    </label>
+                    <button
+                      type="submit"
+                      className="h-10 w-fit cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
+                    >
+                      Registrar pagamento de {formatMoney(parties.adiantamento)}
+                    </button>
+                  </>
+                )}
+              </form>
+              <form className="flex flex-col gap-3" onSubmit={programarSaldo}>
+                <p className="text-sm font-bold text-navy">
+                  Programação do saldo · {formatMoney(saldo?.value ?? parties.restante)}
+                </p>
+                {!saldo ? (
+                  <p className="text-sm text-muted">O saldo ainda não foi gerado.</p>
+                ) : saldo.bloqueio ? (
+                  <p className="text-sm font-semibold text-brand" role="alert">
+                    {saldo.bloqueio}
+                  </p>
+                ) : saldo.scheduledAt ? (
+                  <p className="text-sm text-muted">Programado para {formatDateTime(saldo.scheduledAt)}.</p>
+                ) : (
+                  <>
+                    <label className="flex max-w-sm flex-col gap-2 text-sm font-semibold text-navy">
+                      Data e hora
+                      <DatePicker showTime value={scheduleAt} onChange={setScheduleAt} />
+                    </label>
+                    <button
+                      type="submit"
+                      className="h-10 w-fit cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
+                    >
+                      Programar saldo
+                    </button>
+                  </>
+                )}
+              </form>
+            </div>
+          </section>
+        }
 
         <section className="grid gap-4 lg:grid-cols-2">
-          <form
-            className="flex flex-col gap-3 rounded-2xl border border-line p-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void liquidar("cliente", receivedAt);
-            }}
-          >
-            <p className="text-sm font-bold text-navy">Recebimento do cliente</p>
-            {!receber ? (
-              <p className="text-sm text-muted">O título a receber ainda não foi gerado.</p>
-            ) : receber.liqiudateDate ? (
-              <p className="text-sm text-muted">Recebido em {formatDateTime(receber.liqiudateDate)}.</p>
-            ) : (
-              <>
-                <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
-                  Data e hora
-                  <DatePicker showTime value={receivedAt} onChange={setReceivedAt} />
-                </label>
-                <button
-                  type="submit"
-                  className="h-10 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
-                >
-                  Registrar recebimento
-                </button>
-              </>
-            )}
-          </form>
 
-          <form
-            className="flex flex-col gap-3 rounded-2xl border border-line p-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void liquidar("saldo", paidAt);
-            }}
-          >
-            <p className="text-sm font-bold text-navy">Baixa do saldo</p>
-            {!saldo ? (
-              <p className="text-sm text-muted">O saldo ainda não foi gerado.</p>
-            ) : saldo.bloqueio ? (
-              <p className="text-sm font-semibold text-brand" role="alert">
-                {saldo.bloqueio}
-              </p>
-            ) : saldo.liqiudateDate ? (
-              <p className="text-sm text-muted">Pago em {formatDateTime(saldo.liqiudateDate)}.</p>
-            ) : (
-              <>
-                <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
-                  Data e hora
-                  <DatePicker showTime value={paidAt} onChange={setPaidAt} />
-                </label>
-                <button
-                  type="submit"
-                  className="h-10 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
-                >
-                  Baixar saldo de {formatMoney(saldo.value)}
-                </button>
-              </>
-            )}
-          </form>
+
+          {driver ? null : (
+            <>
+              <form
+                className="flex flex-col gap-3 rounded-2xl border border-line p-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void liquidar("cliente", receivedAt);
+                }}
+              >
+                <p className="text-sm font-bold text-navy">Recebimento do cliente</p>
+                {!receber ? (
+                  <p className="text-sm text-muted">O título a receber ainda não foi gerado.</p>
+                ) : receber.liqiudateDate ? (
+                  <p className="text-sm text-muted">Recebido em {formatDateTime(receber.liqiudateDate)}.</p>
+                ) : (
+                  <>
+                    <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
+                      Data e hora
+                      <DatePicker showTime value={receivedAt} onChange={setReceivedAt} />
+                    </label>
+                    <button
+                      type="submit"
+                      className="h-10 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
+                    >
+                      Registrar recebimento
+                    </button>
+                  </>
+                )}
+              </form>
+
+              <form
+                className="flex flex-col gap-3 rounded-2xl border border-line p-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void liquidar("saldo", paidAt);
+                }}
+              >
+                <p className="text-sm font-bold text-navy">Baixa do saldo</p>
+                {!saldo ? (
+                  <p className="text-sm text-muted">O saldo ainda não foi gerado.</p>
+                ) : saldo.bloqueio ? (
+                  <p className="text-sm font-semibold text-brand" role="alert">
+                    {saldo.bloqueio}
+                  </p>
+                ) : saldo.liqiudateDate ? (
+                  <p className="text-sm text-muted">Pago em {formatDateTime(saldo.liqiudateDate)}.</p>
+                ) : (
+                  <>
+                    <label className="flex flex-col gap-2 text-sm font-semibold text-navy">
+                      Data e hora
+                      <DatePicker showTime value={paidAt} onChange={setPaidAt} />
+                    </label>
+                    <button
+                      type="submit"
+                      className="h-10 cursor-pointer rounded-xl bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand-dark"
+                    >
+                      Baixar saldo de {formatMoney(saldo.value)}
+                    </button>
+                  </>
+                )}
+              </form>
+            </>
+          )}
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2">

@@ -1,4 +1,4 @@
-import { dataHoraObrigatoria, imagemJpeg, textoObrigatorio, textoOpcional } from "../domain/regrasViagem";
+import { dataHoraObrigatoria, imagem, textoObrigatorio, textoOpcional } from "../domain/regrasViagem";
 import { idDaRota, tratar } from "../lib/http";
 import { Vouchers } from "../models/Vouchers";
 import { eventoUnico } from "./eventsController";
@@ -8,7 +8,7 @@ export const attachPhoto = tratar(async (req, res) => {
   const viagem = await requireTrip(idDaRota(req.params.id));
   exigirViagemAtiva(viagem);
   const name = textoObrigatorio(req.body.name, "name");
-  const content = imagemJpeg(req.body.content);
+  const content = imagem(req.body.content);
   const received = textoOpcional(req.body.received)
     ? dataHoraObrigatoria(req.body.received, "received")
     : new Date().toISOString();

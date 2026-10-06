@@ -21,7 +21,7 @@ import {
   type TripQuery,
 } from "./database.trips.services";
 
-export function useTrips() {
+export function useTrips(lockedDriverId?: string) {
   const [search, setSearch] = useState("");
   const [trips, setTrips] = useState<TripListItem[]>([]);
   const [drivers, setDrivers] = useState<Awaited<ReturnType<typeof listDrivers>>>([]);
@@ -44,7 +44,7 @@ export function useTrips() {
   const filtros: TripQuery = {
     status: statusFilter,
     clienteId: clientFilter || undefined,
-    motoristaId: driverFilter || undefined,
+    motoristaId: lockedDriverId || driverFilter || undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
     codigo: codigoConsulta,
@@ -56,23 +56,41 @@ export function useTrips() {
 
     async function load() {
       try {
-        const [list, motoristas, tomadores] = await Promise.all([
-          listTrips(filtros, controller.signal),
-          listDrivers(controller.signal),
-          listClients(controller.signal),
-        ]);
+        const list = await listTrips(filtros, controller.signal);
         if (!active) return;
         setTrips(list);
-        setDrivers(motoristas);
-        setClients(tomadores);
-        setDriversError(motoristas.length === 0 ? "Nenhum motorista terceiro cadastrado." : "");
-        setClientsError(tomadores.length === 0 ? "Nenhum cliente cadastrado." : "");
         setError("");
       } catch (err) {
         if (!active || controller.signal.aborted) return;
         setError(err instanceof Error ? err.message : "Não foi possível carregar as viagens");
       } finally {
         if (active) setLoading(false);
+      }
+
+      if (!active || controller.signal.aborted) return;
+
+      try {
+        const tomadores = await listClients(controller.signal);
+        if (!active) return;
+        setClients(tomadores);
+        setClientsError(tomadores.length === 0 ? "Nenhum cliente cadastrado." : "");
+      } catch (err) {
+        if (!active || controller.signal.aborted) return;
+        setClients([]);
+        setClientsError(err instanceof Error ? err.message : "Não foi possível carregar os clientes");
+      }
+
+      if (lockedDriverId) return;
+
+      try {
+        const motoristas = await listDrivers(controller.signal);
+        if (!active) return;
+        setDrivers(motoristas);
+        setDriversError(motoristas.length === 0 ? "Nenhum motorista terceiro cadastrado." : "");
+      } catch (err) {
+        if (!active || controller.signal.aborted) return;
+        setDrivers([]);
+        setDriversError(err instanceof Error ? err.message : "Não foi possível carregar os motoristas");
       }
     }
 
@@ -81,7 +99,7 @@ export function useTrips() {
       active = false;
       controller.abort();
     };
-  }, [statusFilter, clientFilter, driverFilter, dateFrom, dateTo, codigoConsulta]);
+  }, [statusFilter, clientFilter, driverFilter, dateFrom, dateTo, codigoConsulta, lockedDriverId]);
 
   const summary = useMemo(() => summarize(trips, today), [trips, today]);
 
@@ -271,6 +289,7 @@ export function useTrips() {
     search,
     setSearch,
     visible,
-    draftTrip
+    draftTrip,
+    lockedDriver: Boolean(lockedDriverId),
   };
 }

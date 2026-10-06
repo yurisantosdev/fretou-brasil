@@ -1,10 +1,9 @@
 import "dotenv/config";
 import { setDefaultResultOrder } from "node:dns";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import cors from "cors";
 import express from "express";
 import { connectDatabase, isDatabaseConnected } from "./config/database";
+import { createUserTest } from "./config/userTest";
 import { requireAuth } from "./middleware/auth";
 
 //Routes
@@ -15,21 +14,6 @@ import { clientsRouter } from "@fretou/clients/server/router";
 import { vehiclesRouter } from "@fretou/vehicles/server/router";
 
 setDefaultResultOrder("ipv4first");
-
-function lerVersaoDoPacote(): string {
-  try {
-    const caminho = join(process.cwd(), "package.json");
-    const pkg = JSON.parse(readFileSync(caminho, "utf8")) as {
-      version?: string;
-    };
-    const v = pkg.version?.trim();
-    return v && /^(\d{4})\.\d+$/.test(v) ? v : "unknown";
-  } catch {
-    return "unknown";
-  }
-}
-
-const APP_VERSION = lerVersaoDoPacote();
 
 process.on("uncaughtException", (err) => {
   console.error("[fatal] uncaughtException:", err);
@@ -139,7 +123,6 @@ function payloadSaude(db: boolean) {
   const mongodbUri = lerMongoUri();
   return {
     ok: true,
-    versao: APP_VERSION,
     db,
     jwt: jwtSecretOk,
     ...(mongodbUri ? {} : { aviso: "MONGODB_URI não configurada" }),
@@ -189,7 +172,7 @@ async function iniciarServidorLocal(): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const server = app.listen(PORT, host, () => {
       console.log(
-        `Fretou Brasil API ${APP_VERSION} | HTTP em ${host}:${PORT} | GET /health`
+        `Fretou Brasil | HTTP em ${host}:${PORT} | GET /health`
       );
       resolve();
     });
@@ -208,6 +191,7 @@ async function iniciarServidorLocal(): Promise<void> {
   const ok = await garantirMongo();
   if (ok) {
     console.log("MongoDB conectado.");
+    await createUserTest();
   } else {
     console.error(
       "MongoDB não conectou no startup; novas tentativas ocorrerão a cada request."

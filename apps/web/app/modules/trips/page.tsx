@@ -9,7 +9,7 @@ export default function Trips() {
 
   return (
     <AppShell profile={profile} onLogout={logout} onProfileUpdated={updateProfile}>
-      <TripsPage />
+      {profile ? <TripsPage lockedDriverId={profile.driver ? profile.id : undefined} /> : null}
     </AppShell>
   );
 }

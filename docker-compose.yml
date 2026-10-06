@@ -1,0 +1,85 @@
+# Desenvolvimento local. Depois da primeira imagem:
+#   docker compose up
+# O código entra por volume (hot reload). node_modules fica na imagem Linux,
+# então o disco do Mac não entra no container. O cache do Next fica em volume.
+
+x-dev: &dev
+  build: .
+  image: fretou-brasil-dev
+  init: true
+  working_dir: /app
+  volumes:
+    - ./apps/web/app:/app/apps/web/app
+    - ./apps/web/public:/app/apps/web/public
+    - ./apps/web/next.config.js:/app/apps/web/next.config.js
+    - ./apps/web/tsconfig.json:/app/apps/web/tsconfig.json
+    - ./apps/web/postcss.config.mjs:/app/apps/web/postcss.config.mjs
+    - ./apps/web/eslint.config.js:/app/apps/web/eslint.config.js
+    - ./apps/web/.env:/app/apps/web/.env
+    - ./apps/api/src:/app/apps/api/src
+    - ./apps/api/tsconfig.json:/app/apps/api/tsconfig.json
+    - ./apps/api/.env:/app/apps/api/.env
+    - ./packages/fretou-clients/src:/app/packages/fretou-clients/src
+    - ./packages/fretou-clients/server:/app/packages/fretou-clients/server
+    - ./packages/fretou-clients/tsconfig.json:/app/packages/fretou-clients/tsconfig.json
+    - ./packages/fretou-components/src:/app/packages/fretou-components/src
+    - ./packages/fretou-components/tsconfig.json:/app/packages/fretou-components/tsconfig.json
+    - ./packages/fretou-trips/src:/app/packages/fretou-trips/src
+    - ./packages/fretou-trips/server:/app/packages/fretou-trips/server
+    - ./packages/fretou-trips/tsconfig.json:/app/packages/fretou-trips/tsconfig.json
+    - ./packages/fretou-users/src:/app/packages/fretou-users/src
+    - ./packages/fretou-users/server:/app/packages/fretou-users/server
+    - ./packages/fretou-users/tsconfig.json:/app/packages/fretou-users/tsconfig.json
+    - ./packages/fretou-vehicles/src:/app/packages/fretou-vehicles/src
+    - ./packages/fretou-vehicles/server:/app/packages/fretou-vehicles/server
+    - ./packages/fretou-vehicles/tsconfig.json:/app/packages/fretou-vehicles/tsconfig.json
+    - ./packages/typescript-config:/app/packages/typescript-config
+    - web_next:/app/apps/web/.next
+
+services:
+  mongo:
+    image: mongo:7
+    pull_policy: if_not_present
+    command: ["mongod", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/27017'"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
+
+  api:
+    <<: *dev
+    command: ["npm", "run", "dev", "-w", "api"]
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      MONGODB_URI: mongodb://mongo:27017/fretouBrasil
+      JWT_SECRET: dev-secret-fretou-brasil
+      HUSKY: "0"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  web:
+    <<: *dev
+    command: ["npm", "run", "dev", "-w", "web", "--", "--hostname", "0.0.0.0"]
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_TELEMETRY_DISABLED: "1"
+      WATCHPACK_POLLING: "true"
+      HUSKY: "0"
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  mongo_data:
+  web_next:

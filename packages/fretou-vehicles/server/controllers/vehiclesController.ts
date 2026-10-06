@@ -55,6 +55,21 @@ function placaDuplicada(err: unknown): boolean {
   );
 }
 
+async function motoristaTerceiro(req: Request): Promise<mongoose.Types.ObjectId | null> {
+  const sub = (req as Request & { user?: { sub?: string } }).user?.sub;
+  if (!sub || !mongoose.isValidObjectId(sub)) return null;
+
+  const UserModel = mongoose.models.User;
+  if (!UserModel) return null;
+
+  const conta = await UserModel.findById(sub)
+    .select("driver thirdParty")
+    .lean<{ driver?: boolean; thirdParty?: boolean } | null>();
+  if (!conta || conta.driver !== true || conta.thirdParty !== true) return null;
+
+  return new mongoose.Types.ObjectId(sub);
+}
+
 export function serializar(vehicle: VehiclesType): VehiclesResponse {
   return {
     _id: vehicle._id,
@@ -105,8 +120,14 @@ export async function create(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  const driver = await motoristaTerceiro(req);
+
   try {
-    const vehicle = await Vehicle.create({ ...dados, thirdParty: false });
+    const vehicle = await Vehicle.create({
+      ...dados,
+      thirdParty: driver !== null,
+      ...(driver ? { driver } : {}),
+    });
     res.status(201).json(serializar(vehicle as VehiclesType));
   } catch (err) {
     if (placaDuplicada(err)) {

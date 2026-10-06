@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import { UserFormProps } from "./types";
 import { useUserForm } from "./services";
 import { DriverVehicles } from "./_components/driverVehicles";
@@ -11,6 +13,7 @@ export function UserForm({
   onSubmit,
   defaultDriver = false
 }: UserFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
   const data = useUserForm({
     user,
     onCancel,
@@ -83,15 +86,25 @@ export function UserForm({
 
           <label htmlFor={passwordId} className="flex flex-col gap-2 text-sm font-semibold text-navy">
             Senha
-            <input
-              id={passwordId}
-              className={inputClass}
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              placeholder={user ? "Nova senha" : "Digite a senha"}
-              onChange={(event) => setPassword(event.target.value)}
-            />
+            <div className="relative">
+              <input
+                id={passwordId}
+                className={`${inputClass} pr-11`}
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                value={password}
+                placeholder={user ? "Nova senha" : "Digite a senha"}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                className="absolute top-1/2 right-3 grid size-7 -translate-y-1/2 cursor-pointer place-items-center text-muted transition hover:text-navy"
+                onClick={() => setShowPassword((current) => !current)}
+              >
+                {showPassword ? <EyeSlashIcon size={20} /> : <EyeIcon size={20} />}
+              </button>
+            </div>
             {user ? (
               <span className="text-xs font-normal text-muted">Deixe em branco para manter a senha atual.</span>
             ) : null}
