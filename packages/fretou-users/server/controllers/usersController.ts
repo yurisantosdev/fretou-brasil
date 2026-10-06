@@ -8,7 +8,6 @@ export function serializar(user: UsersType): UsersResponse {
   return {
     _id: user._id,
     name: user.name,
-    password: user.password,
     cpf: user.cpf,
     driver: user.driver,
     plateVehicle: user.plateVehicle,
